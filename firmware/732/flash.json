@@ -9,6 +9,10 @@
       "address": "0x8000"
     },
     {
+      "name": "boot_app0.bin",
+      "address": "0xE000"
+    },
+    {
       "name": "firmware.bin",
       "address": "0x10000"
     },
