@@ -13,12 +13,6 @@
   <title>BPM Converter Firmware</title>
 
 
-  <script
-    type="module"
-    src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"
-  ></script>
-
-
   <style>
 
     :root {
@@ -276,12 +270,7 @@
     }
 
 
-    esp-web-install-button {
-      display: block;
-    }
-
-
-    esp-web-install-button button {
+    #installButton {
       width: 100%;
 
       min-height: 50px;
@@ -312,15 +301,24 @@
     }
 
 
-    esp-web-install-button button:hover {
+    #installButton:hover:not(:disabled) {
       background:
         var(--accent-dark);
     }
 
 
-    esp-web-install-button button:active {
+    #installButton:active:not(:disabled) {
       transform:
         scale(0.98);
+    }
+
+
+    #installButton:disabled {
+      background:
+        #aeb8c8;
+
+      cursor:
+        default;
     }
 
 
@@ -517,33 +515,12 @@
       <div class="install-area">
 
 
-        <esp-web-install-button
+        <button
           id="installButton"
+          disabled
         >
-
-          <button slot="activate">
-            USB로 펌웨어 설치
-          </button>
-
-
-          <span slot="unsupported">
-
-            이 브라우저에서는
-            Web Serial을 지원하지 않습니다.<br>
-
-            데스크톱 Chrome 또는 Edge를
-            사용해 주세요.
-
-          </span>
-
-
-          <span slot="not-allowed">
-
-            HTTPS 페이지에서 사용해야 합니다.
-
-          </span>
-
-        </esp-web-install-button>
+          USB로 펌웨어 설치
+        </button>
 
 
         <div
@@ -622,7 +599,12 @@
   </main>
 
 
-  <script>
+  <script type="module">
+
+    import {
+      ESPLoader,
+      Transport
+    } from "https://unpkg.com/esptool-js@0.6.1/bundle.js";
 
 
     const BASE_URL =
@@ -631,6 +613,10 @@
 
     const GITHUB_API_URL =
       "https://api.github.com/repos/estevalis/bpm-converter-firmware/contents/firmware";
+
+
+    const BAUDRATE =
+      1500000;
 
 
     const versionSelect =
@@ -667,8 +653,12 @@
       null;
 
 
-    let currentManifestUrl =
+    let currentFlashConfig =
       null;
+
+
+    let flashing =
+      false;
 
 
     async function getVersions() {
@@ -714,7 +704,7 @@
           (a, b) =>
             b - a
         )
-        
+
         .slice(0, 10);
 
     }
@@ -751,83 +741,6 @@
     }
 
 
-    function createManifest(
-      version,
-      flashConfig
-    ) {
-
-      const parts = [];
-
-
-      for (
-        const file of flashConfig.files
-      ) {
-
-
-        /*
-         * factory 이미지는 사용하지 않습니다.
-         *
-         * factory 이미지를 0x000000부터
-         * 플래싱하면 NVS를 포함한 영역이
-         * 덮어써질 수 있습니다.
-         */
-
-        if (
-          file.name ===
-          "firmware.factory.bin"
-        ) {
-
-          continue;
-
-        }
-
-
-        parts.push({
-
-          path:
-            `${BASE_URL}/firmware/${version}/${file.name}`,
-
-          offset:
-            Number(file.address)
-
-        });
-
-      }
-
-
-      return {
-
-        name:
-          "BPM Converter",
-
-        version:
-          String(version),
-
-        new_install_prompt_erase:
-          true,
-
-        builds: [
-
-          {
-
-            chipFamily:
-              "ESP32",
-
-            improv:
-              false,
-
-            parts:
-              parts
-
-          }
-
-        ]
-
-      };
-
-    }
-
-
     async function loadFirmware(
       version
     ) {
@@ -846,11 +759,8 @@
         );
 
 
-      const manifest =
-        createManifest(
-          version,
-          flashConfig
-        );
+      currentFlashConfig =
+        flashConfig;
 
 
       console.log(
@@ -865,49 +775,6 @@
       );
 
 
-      console.log(
-        "manifest:",
-        manifest
-      );
-
-
-      const json =
-        JSON.stringify(
-          manifest
-        );
-
-
-      const blob =
-        new Blob(
-          [json],
-          {
-            type:
-              "application/json"
-          }
-        );
-
-
-      if (
-        currentManifestUrl
-      ) {
-
-        URL.revokeObjectURL(
-          currentManifestUrl
-        );
-
-      }
-
-
-      currentManifestUrl =
-        URL.createObjectURL(
-          blob
-        );
-
-
-      installButton.manifest =
-        currentManifestUrl;
-
-
       firmwareInfo.innerHTML =
         `<strong>Build ${version}</strong><br>` +
         `ESP32용 펌웨어입니다.`;
@@ -916,6 +783,10 @@
       messageElement.innerHTML =
         "USB로 ESP32를 연결한 후<br>" +
         "설치 버튼을 눌러주세요.";
+
+
+      installButton.disabled =
+        false;
 
     }
 
@@ -958,39 +829,579 @@
     }
 
 
-    async function initialize() {
-    
+    async function fetchFlashFiles(
+      version,
+      flashConfig
+    ) {
+
+      const files = [];
+
+
+      for (
+        const file of flashConfig.files
+      ) {
+
+        /*
+         * factory 이미지는 사용하지 않습니다.
+         *
+         * factory 이미지는 0x000000부터
+         * 전체 이미지를 플래싱할 수 있으므로
+         * NVS를 포함한 영역을 덮어쓸 가능성이 있습니다.
+         */
+
+        if (
+          file.name ===
+          "firmware.factory.bin"
+        ) {
+
+          console.log(
+            "Skipping factory image:",
+            file.name
+          );
+
+          continue;
+
+        }
+
+
+        const url =
+          `${BASE_URL}/firmware/${version}/${file.name}`;
+
+
+        messageElement.textContent =
+          `${file.name} 다운로드 중...`;
+
+
+        console.log(
+          "Downloading:",
+          url
+        );
+
+
+        const response =
+          await fetch(
+            url,
+            {
+              cache: "no-store"
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `${file.name} HTTP ${response.status}`
+          );
+
+        }
+
+
+        const buffer =
+          await response.arrayBuffer();
+
+
+        files.push({
+
+          data:
+            new Uint8Array(
+              buffer
+            ),
+
+          address:
+            Number(
+              file.address
+            ),
+
+          name:
+            file.name
+
+        });
+
+      }
+
+
+      return files;
+
+    }
+
+
+    function createTerminal() {
+
+      return {
+
+        clean() {
+          console.clear();
+        },
+
+
+        writeLine(data) {
+
+          console.log(
+            data
+          );
+
+        },
+
+
+        write(data) {
+
+          console.log(
+            data
+          );
+
+        }
+
+      };
+
+    }
+
+
+    async function installFirmware() {
+
+      if (
+        flashing
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !currentFlashConfig
+      ) {
+
+        return;
+
+      }
+
+
+      flashing =
+        true;
+
+
+      installButton.disabled =
+        true;
+
+
+      versionSelect.disabled =
+        true;
+
+
+      let port =
+        null;
+
+
+      let transport =
+        null;
+
+
       try {
-    
+
+        const version =
+          Number(
+            versionSelect.value
+          );
+
+
+        /*
+         * 먼저 USB 포트를 선택합니다.
+         */
+
+        messageElement.textContent =
+          "USB 포트를 선택해 주세요.";
+
+
+        port =
+          await navigator.serial.requestPort();
+
+
+        /*
+         * esptool-js Transport를 생성합니다.
+         */
+
+        transport =
+          new Transport(
+            port,
+            true
+          );
+
+
+        /*
+         * 1,500,000 baud를 사용합니다.
+         */
+
+        const esploader =
+          new ESPLoader({
+
+            transport:
+              transport,
+
+            baudrate:
+              BAUDRATE,
+
+            terminal:
+              createTerminal(),
+
+            debugLogging:
+              false
+
+          });
+
+
+        messageElement.textContent =
+          `ESP32에 연결하는 중... (${BAUDRATE.toLocaleString()} baud)`;
+
+
+        /*
+         * ESP32 칩을 감지합니다.
+         *
+         * 연결 과정에서 필요하면
+         * bootloader mode로 전환합니다.
+         */
+
+        const chipName =
+          await esploader.main();
+
+
+        console.log(
+          "Connected to:",
+          chipName
+        );
+
+
+        messageElement.textContent =
+          `${chipName} 연결됨. 펌웨어를 준비하는 중...`;
+
+
+        /*
+         * flash.json에 지정된 모든 BIN을
+         * 다운로드합니다.
+         *
+         * firmware.factory.bin은 제외됩니다.
+         */
+
+        const fileArray =
+          await fetchFlashFiles(
+            version,
+            currentFlashConfig
+          );
+
+
+        if (
+          fileArray.length === 0
+        ) {
+
+          throw new Error(
+            "플래싱할 펌웨어 파일이 없습니다."
+          );
+
+        }
+
+
+        console.log(
+          "Flash files:",
+          fileArray
+        );
+
+
+        /*
+         * esptool-js가 요구하는
+         * data/address 배열만 추출합니다.
+         */
+
+        const flashFiles =
+          fileArray.map(
+            file => ({
+
+              data:
+                file.data,
+
+              address:
+                file.address
+
+            })
+          );
+
+
+        messageElement.textContent =
+          `펌웨어 설치 중... 0%`;
+
+
+        /*
+         * 중요:
+         *
+         * eraseAll: false
+         *
+         * 전체 Flash erase를 하지 않습니다.
+         *
+         * 또한 flash.json에 지정된 주소의
+         * 파일만 기록합니다.
+         *
+         * 따라서 NVS 영역 자체를
+         * 별도로 erase하지 않습니다.
+         */
+
+        await esploader.writeFlash({
+
+          fileArray:
+            flashFiles,
+
+          /*
+           * 이미지에 기록된 flash 설정을
+           * 유지합니다.
+           */
+
+          flashMode:
+            "keep",
+
+          flashFreq:
+            "keep",
+
+          flashSize:
+            "keep",
+
+          eraseAll:
+            false,
+
+          /*
+           * 전송 데이터 압축을 사용합니다.
+           */
+
+          compress:
+            true,
+
+
+          reportProgress(
+            fileIndex,
+            written,
+            total
+          ) {
+
+            const percent =
+              total > 0
+                ? Math.round(
+                    written /
+                    total *
+                    100
+                  )
+                : 0;
+
+
+            const file =
+              fileArray[
+                fileIndex
+              ];
+
+
+            messageElement.textContent =
+              `Build ${version} 설치 중... ` +
+              `${percent}%`;
+
+
+            console.log(
+              `Writing ${file.name}: ${percent}%`
+            );
+
+          }
+
+        });
+
+
+        messageElement.textContent =
+          "펌웨어 설치 완료. ESP32를 재시작하는 중...";
+
+
+        /*
+         * 플래싱 완료 후 ESP32를
+         * 하드 리셋합니다.
+         */
+
+        await esploader.after(
+          "hard_reset"
+        );
+
+
+        messageElement.textContent =
+          "펌웨어 설치가 완료되었습니다.";
+
+
+        firmwareInfo.innerHTML =
+          `<strong>Build ${version}</strong><br>` +
+          `펌웨어 설치가 완료되었습니다.`;
+
+
+        console.log(
+          "Firmware flashing completed."
+        );
+
+
+        /*
+         * 잠시 후 Serial transport를 닫습니다.
+         */
+
+        try {
+
+          await transport.disconnect();
+
+        } catch (
+          disconnectError
+        ) {
+
+          console.warn(
+            "Disconnect warning:",
+            disconnectError
+          );
+
+        }
+
+
+      } catch (
+        error
+      ) {
+
+        console.error(
+          "Firmware installation failed:",
+          error
+        );
+
+
+        let errorMessage =
+          error &&
+          error.message
+            ? error.message
+            : String(
+                error
+              );
+
+
+        /*
+         * 사용자가 포트 선택창에서
+         * 취소한 경우 별도의 오류처럼
+         * 보이지 않게 합니다.
+         */
+
+        if (
+          errorMessage
+            .toLowerCase()
+            .includes(
+              "cancel"
+            )
+        ) {
+
+          messageElement.textContent =
+            "USB 포트 선택이 취소되었습니다.";
+
+        } else {
+
+          messageElement.innerHTML =
+            `<span class="error">` +
+            `설치 실패: ${errorMessage}` +
+            `</span>`;
+
+        }
+
+
+        /*
+         * 오류가 발생했더라도
+         * 연결되어 있다면 정리합니다.
+         */
+
+        if (
+          transport
+        ) {
+
+          try {
+
+            await transport.disconnect();
+
+          } catch (
+            disconnectError
+          ) {
+
+            console.warn(
+              "Disconnect warning:",
+              disconnectError
+            );
+
+          }
+
+        }
+
+      } finally {
+
+        flashing =
+          false;
+
+
+        versionSelect.disabled =
+          false;
+
+
+        installButton.disabled =
+          false;
+
+      }
+
+    }
+
+
+    async function initialize() {
+
+      /*
+       * Web Serial 지원 여부를 확인합니다.
+       */
+
+      if (
+        !("serial" in navigator)
+      ) {
+
+        firmwareInfo.innerHTML =
+          `<span class="error">` +
+          `이 브라우저에서는 Web Serial을 지원하지 않습니다.` +
+          `</span>`;
+
+
+        messageElement.innerHTML =
+          "데스크톱 Chrome 또는 Edge를 사용해 주세요.";
+
+
+        return;
+
+      }
+
+
+      try {
+
         const versions =
           await getVersions();
-    
-    
+
+
         if (
           versions.length === 0
         ) {
-    
+
           throw new Error(
             "설치 가능한 펌웨어가 없습니다."
           );
-    
+
         }
-    
-    
+
+
         /*
          * 가장 높은 Build 번호를
          * 최신 버전으로 사용합니다.
          */
-    
+
         latestVersion =
           versions[0];
-    
-    
+
+
         populateVersions(
           versions
         );
-    
-    
+
+
         /*
          * 최신 버전부터 순서대로
          * flash.json을 확인합니다.
@@ -999,127 +1410,139 @@
          * 올라오지 않아 404가 발생하더라도
          * 구버전으로 자동 fallback 합니다.
          */
-    
+
         let loadedVersion =
           null;
-    
+
+
         let lastError =
           null;
-    
-    
+
+
         for (
           const version of versions
         ) {
-    
+
           try {
-    
+
             await loadFirmware(
               version
             );
-    
+
+
             loadedVersion =
               version;
-    
+
+
             break;
-    
-          } catch (error) {
-    
+
+          } catch (
+            error
+          ) {
+
             console.warn(
               `Build ${version}을 불러오지 못했습니다:`,
               error
             );
-    
+
+
             lastError =
               error;
-    
+
           }
-    
+
         }
-    
-    
+
+
         /*
          * 하나도 정상적으로 불러오지 못한 경우에만
          * 전체 오류로 처리합니다.
          */
-    
+
         if (
           loadedVersion === null
         ) {
-    
+
           throw lastError ||
             new Error(
               "사용 가능한 펌웨어가 없습니다."
             );
-    
+
         }
-    
-    
+
+
         /*
          * 실제로 로드에 성공한 버전을 선택합니다.
          */
-    
+
         versionSelect.value =
           String(
             loadedVersion
           );
-    
-    
+
+
         /*
          * 선택창은 항상 활성화합니다.
          */
-    
+
         versionSelect.disabled =
           false;
-    
-    
+
+
         /*
          * 최신 Build가 실제로 선택된 경우에만
          * '최신' 표시를 합니다.
          */
-    
+
         if (
           loadedVersion ===
           latestVersion
         ) {
-    
+
           latestBadge.style.display =
             "inline-block";
-    
+
         } else {
-    
+
           latestBadge.style.display =
             "none";
-    
+
         }
-    
-    
-      } catch (error) {
-    
+
+
+      } catch (
+        error
+      ) {
+
         console.error(
           error
         );
-    
-    
+
+
         /*
          * 모든 버전이 실패한 경우에만
          * 선택창을 비활성화합니다.
          */
-    
+
         versionSelect.disabled =
           true;
-    
-    
+
+
+        installButton.disabled =
+          true;
+
+
         firmwareInfo.innerHTML =
           `<span class="error">${
             error.message
           }</span>`;
-    
-    
+
+
         messageElement.textContent =
           "";
-    
+
       }
-    
+
     }
 
 
@@ -1151,16 +1574,26 @@
           }
 
 
+          installButton.disabled =
+            true;
+
+
           await loadFirmware(
             version
           );
 
 
-        } catch (error) {
+        } catch (
+          error
+        ) {
 
           console.error(
             error
           );
+
+
+          installButton.disabled =
+            true;
 
 
           firmwareInfo.innerHTML =
@@ -1171,6 +1604,12 @@
         }
 
       }
+    );
+
+
+    installButton.addEventListener(
+      "click",
+      installFirmware
     );
 
 
