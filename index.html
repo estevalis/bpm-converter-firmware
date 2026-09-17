@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -12,24 +10,24 @@
 
   <title>BPM Converter</title>
 
-  <style>
+  <script
+    type="module"
+    src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"
+  ></script>
 
+  <style>
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      padding: 24px 16px 40px;
-      background: #f5f6f8;
-      color: #202124;
+      background: #f5f5f5;
+      color: #222;
       font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
         sans-serif;
     }
 
@@ -37,316 +35,130 @@
       width: 100%;
       max-width: 480px;
       margin: 0 auto;
+      padding: 24px 16px 40px;
     }
 
-    .header {
-      padding: 8px 4px 24px;
-    }
-
-    .header h1 {
+    h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      letter-spacing: -0.5px;
     }
 
-    .header p {
-      margin: 7px 0 0;
-      color: #70757a;
-      font-size: 15px;
+    .subtitle {
+      margin-top: 6px;
+      color: #777;
+      font-size: 14px;
     }
 
     .card {
-      margin-bottom: 14px;
-      padding: 18px;
-      background: #ffffff;
-      border-radius: 14px;
+      margin-top: 18px;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
       box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.08);
+        0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    .card-title {
-      margin-bottom: 12px;
-      color: #3c4043;
+    .label {
+      display: block;
+      margin-bottom: 8px;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 600;
+      color: #555;
     }
 
     select {
       width: 100%;
-      height: 48px;
+      height: 46px;
       padding: 0 12px;
-      border: 1px solid #d0d3d8;
-      border-radius: 9px;
-      background: #ffffff;
-      color: #202124;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: white;
       font-size: 16px;
-      outline: none;
-    }
-
-    select:focus {
-      border-color: #1a73e8;
     }
 
     .version-info {
-      margin-top: 9px;
-      color: #70757a;
-      font-size: 13px;
-    }
-
-    .connection {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-height: 24px;
-    }
-
-    .connection-dot {
-      width: 10px;
-      height: 10px;
-      flex: 0 0 10px;
-      border-radius: 50%;
-      background: #9aa0a6;
-    }
-
-    .connection-dot.connected {
-      background: #1e8e3e;
-    }
-
-    .connection-text {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .button {
-      width: 100%;
-      height: 48px;
-      margin-top: 14px;
-      border: 0;
-      border-radius: 9px;
-      background: #202124;
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .button:hover {
-      background: #303134;
-    }
-
-    .button:disabled {
-      background: #b7b9bc;
-      cursor: not-allowed;
-    }
-
-    .button-primary {
-      background: #1a73e8;
-    }
-
-    .button-primary:hover {
-      background: #1769d1;
-    }
-
-    .hint {
       margin-top: 10px;
-      color: #70757a;
       font-size: 13px;
-      line-height: 1.5;
+      color: #777;
     }
 
     .warning {
-      padding: 12px 13px;
-      border-radius: 9px;
-      background: #f8f9fa;
-      color: #5f6368;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #fff4e5;
+      color: #8a5200;
       font-size: 13px;
-      line-height: 1.55;
+      line-height: 1.5;
     }
 
-    .progress-container {
-      display: none;
+    esp-web-install-button {
+      display: block;
+      margin-top: 18px;
+
+      --esp-tools-button-color: #2e7d32;
+      --esp-tools-button-text-color: white;
+      --esp-tools-button-border-radius: 10px;
+    }
+
+    .unsupported {
       margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #ffeaea;
+      color: #a00000;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
-    .progress-bar {
-      width: 100%;
-      height: 10px;
-      overflow: hidden;
-      border-radius: 5px;
-      background: #e0e3e7;
-    }
-
-    .progress {
-      width: 0%;
-      height: 100%;
-      border-radius: 5px;
-      background: #1a73e8;
-      transition: width 0.1s;
-    }
-
-    .progress-text {
-      margin-top: 7px;
-      text-align: right;
-      color: #70757a;
-      font-size: 13px;
-    }
-
-    .status-card {
-      display: none;
+    .not-allowed {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #ffeaea;
+      color: #a00000;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .status {
-      padding: 12px 13px;
-      border-radius: 9px;
-      background: #f8f9fa;
-      color: #3c4043;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: 13px;
+      color: #777;
     }
 
-    .status.success {
-      background: #e6f4ea;
-      color: #137333;
-    }
-
-    .status.error {
-      background: #fce8e6;
-      color: #c5221f;
-    }
-
-    .terminal-container {
-      display: none;
-      margin-top: 14px;
-    }
-
-    .terminal-title {
-      margin-bottom: 7px;
-      color: #70757a;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .terminal {
-      height: 180px;
-      padding: 11px;
-      overflow-y: auto;
-      border-radius: 9px;
-      background: #202124;
-      color: #dadce0;
-      font-family: monospace;
-      font-size: 11px;
-      line-height: 1.45;
-      white-space: pre-wrap;
-    }
-
-    .complete {
-      display: none;
-      margin-top: 16px;
+    .footer {
+      margin-top: 24px;
       text-align: center;
+      color: #999;
+      font-size: 12px;
     }
-
-    .complete-icon {
-      font-size: 36px;
-      line-height: 1;
-    }
-
-    .complete-title {
-      margin-top: 10px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .complete-text {
-      margin-top: 6px;
-      color: #70757a;
-      font-size: 13px;
-      line-height: 1.5;
-      white-space: pre-line;
-    }
-
-    .browser-warning {
-      display: none;
-      margin-bottom: 14px;
-      padding: 13px;
-      border-radius: 9px;
-      background: #fce8e6;
-      color: #c5221f;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    @media (max-width: 480px) {
-
-      body {
-        padding: 18px 12px 30px;
-      }
-
-      .header {
-        padding-bottom: 20px;
-      }
-
-      .header h1 {
-        font-size: 25px;
-      }
-
-      .card {
-        padding: 16px;
-      }
-
-    }
-
   </style>
-
-  <!--
-    esptool-js single-file browser bundle.
-    Do NOT use lib/index.js here.
-  -->
-  <script
-    src="https://unpkg.com/esptool-js@0.6.1/bundle.js">
-  </script>
-
 </head>
-
 
 <body>
 
   <div class="container">
 
+    <h1>BPM Converter</h1>
 
-    <div class="header">
-
-      <h1>
-        BPM Converter
-      </h1>
-
-      <p>
-        펌웨어 업데이트
-      </p>
-
-    </div>
-
-
-    <div
-      id="browserWarning"
-      class="browser-warning">
-
-      이 브라우저는 USB 연결 기능을 지원하지 않습니다.<br>
-      Chrome 또는 Edge를 사용해 주세요.
-
+    <div class="subtitle">
+      펌웨어 업데이트
     </div>
 
 
     <div class="card">
 
-      <div class="card-title">
+      <label
+        class="label"
+        for="version"
+      >
         펌웨어 버전
-      </div>
+      </label>
 
-
-      <select
-        id="versionSelect">
+      <select id="version">
 
         <option value="">
           버전 불러오는 중...
@@ -354,480 +166,458 @@
 
       </select>
 
-
       <div
         id="versionInfo"
-        class="version-info">
-      </div>
+        class="version-info"
+      ></div>
 
     </div>
 
 
     <div class="card">
 
-      <div class="card-title">
-        USB 연결
+      <div class="label">
+        ESP32 펌웨어 설치
       </div>
-
-
-      <div class="connection">
-
-        <div
-          id="connectionDot"
-          class="connection-dot">
-        </div>
-
-
-        <div
-          id="connectionStatus"
-          class="connection-text">
-
-          연결되지 않음
-
-        </div>
-
-      </div>
-
-
-      <button
-        id="connectButton"
-        class="button">
-
-        ESP32 연결
-
-      </button>
-
-
-      <div class="hint">
-
-        ESP32를 USB로 연결한 후 버튼을 눌러 주세요.
-
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <div class="card-title">
-        펌웨어 설치
-      </div>
-
 
       <div class="warning">
+        USB 케이블로 BPM Converter를 컴퓨터에 연결한 후
+        아래 버튼을 눌러주세요.<br><br>
 
-        NVS 영역은 플래싱하지 않습니다.<br>
-        저장된 Wi-Fi 설정 등의 사용자 설정은 유지됩니다.
-
+        <strong>
+          기존 설정을 유지하려면
+          장치를 지우지 마세요.
+        </strong>
       </div>
 
 
-      <button
-        id="flashButton"
-        class="button button-primary"
-        disabled>
+      <esp-web-install-button
+        id="installButton"
+        manifest=""
+      >
 
-        펌웨어 설치
-
-      </button>
-
-
-      <div
-        id="progressContainer"
-        class="progress-container">
+        <button
+          slot="activate"
+          type="button"
+        >
+          펌웨어 설치
+        </button>
 
 
-        <div class="progress-bar">
+        <div
+          slot="unsupported"
+          class="unsupported"
+        >
+          이 브라우저에서는 Web Serial을 지원하지 않습니다.<br><br>
 
-          <div
-            id="progress"
-            class="progress">
-          </div>
-
+          데스크톱 Chrome 또는 Microsoft Edge를
+          사용해주세요.
         </div>
 
 
         <div
-          id="progressText"
-          class="progress-text">
-
-          0%
-
+          slot="not-allowed"
+          class="not-allowed"
+        >
+          이 페이지에서는 USB 장치 접근이 허용되지 않습니다.
         </div>
 
-
-      </div>
-
-    </div>
-
-
-    <div
-      id="statusCard"
-      class="card status-card">
-
-
-      <div class="card-title">
-        상태
-      </div>
+      </esp-web-install-button>
 
 
       <div
         id="status"
-        class="status">
-      </div>
-
-
-      <div
-        id="terminalContainer"
-        class="terminal-container">
-
-
-        <div class="terminal-title">
-          상세 로그
-        </div>
-
-
-        <div
-          id="terminal"
-          class="terminal">
-        </div>
-
-
-      </div>
-
-
-      <div
-        id="complete"
-        class="complete">
-
-
-        <div class="complete-icon">
-          ✓
-        </div>
-
-
-        <div class="complete-title">
-          설치 완료
-        </div>
-
-
-        <div
-          id="completeText"
-          class="complete-text">
-        </div>
-
-
-      </div>
-
+        class="status"
+      ></div>
 
     </div>
 
+
+    <div class="footer">
+      BPM Converter Firmware
+    </div>
 
   </div>
 
 
   <script>
 
-    /*
-     * esptool-js 0.6.1 bundle.js exposes the classes
-     * through the global "esptool" object.
-     */
-
-    const ESPLoader =
-      window.esptool.ESPLoader;
-
-    const Transport =
-      window.esptool.Transport;
-
-
-    const REPOSITORY_BASE =
-      "https://raw.githubusercontent.com/estevalis/bpm-converter-firmware/main";
-
-
-    const LATEST_URL =
-      REPOSITORY_BASE +
-      "/latest.json";
-
-
-    let selectedVersion =
-      null;
-
-    let flashConfig =
-      null;
-
-    let port =
-      null;
-
-    let transport =
-      null;
-
-    let esploader =
-      null;
-
+    const BASE_URL =
+      "https://estevalis.github.io/bpm-converter-firmware";
 
     const versionSelect =
-      document.getElementById(
-        "versionSelect"
-      );
-
+      document.getElementById("version");
 
     const versionInfo =
-      document.getElementById(
-        "versionInfo"
-      );
+      document.getElementById("versionInfo");
 
-
-    const connectButton =
-      document.getElementById(
-        "connectButton"
-      );
-
-
-    const flashButton =
-      document.getElementById(
-        "flashButton"
-      );
-
-
-    const connectionStatus =
-      document.getElementById(
-        "connectionStatus"
-      );
-
-
-    const connectionDot =
-      document.getElementById(
-        "connectionDot"
-      );
-
-
-    const progressContainer =
-      document.getElementById(
-        "progressContainer"
-      );
-
-
-    const progressElement =
-      document.getElementById(
-        "progress"
-      );
-
-
-    const progressText =
-      document.getElementById(
-        "progressText"
-      );
-
-
-    const statusCard =
-      document.getElementById(
-        "statusCard"
-      );
-
+    const installButton =
+      document.getElementById("installButton");
 
     const status =
-      document.getElementById(
-        "status"
-      );
+      document.getElementById("status");
 
 
-    const terminalContainer =
-      document.getElementById(
-        "terminalContainer"
-      );
-
-
-    const terminalElement =
-      document.getElementById(
-        "terminal"
-      );
-
-
-    const complete =
-      document.getElementById(
-        "complete"
-      );
-
-
-    const completeText =
-      document.getElementById(
-        "completeText"
-      );
-
-
-    const browserWarning =
-      document.getElementById(
-        "browserWarning"
-      );
-
-
-    function showStatus(
-      message,
-      type = ""
-    ) {
-
-      statusCard.style.display =
-        "block";
-
-      status.className =
-        "status " + type;
-
-      status.textContent =
-        message;
-
-    }
-
-
-    function terminalWrite(
-      message
-    ) {
-
-      terminalContainer.style.display =
-        "block";
-
-      terminalElement.textContent +=
-        message;
-
-      terminalElement.scrollTop =
-        terminalElement.scrollHeight;
-
-    }
-
-
-    function terminalWriteLine(
-      message
-    ) {
-
-      terminalWrite(
-        message + "\n"
-      );
-
-    }
-
-
-    function setProgress(
-      percent
-    ) {
-
-      const value =
-        Math.max(
-          0,
-          Math.min(
-            100,
-            percent
-          )
-        );
-
-
-      progressElement.style.width =
-        value + "%";
-
-
-      progressText.textContent =
-        value.toFixed(1) + "%";
-
-    }
-
-
-    function setConnected(
-      connected,
-      chipName = ""
-    ) {
-
-      if (connected) {
-
-        connectionDot.classList.add(
-          "connected"
-        );
-
-
-        connectionStatus.textContent =
-          "연결됨" +
-          (
-            chipName
-              ? " · " + chipName
-              : ""
-          );
-
-
-        connectButton.textContent =
-          "ESP32 연결됨";
-
-
-        connectButton.disabled =
-          true;
-
-      } else {
-
-        connectionDot.classList.remove(
-          "connected"
-        );
-
-
-        connectionStatus.textContent =
-          "연결되지 않음";
-
-
-        connectButton.textContent =
-          "ESP32 연결";
-
-
-        connectButton.disabled =
-          false;
-
-      }
-
-    }
+    let manifestObjectUrl = null;
 
 
     async function loadLatestVersion() {
 
-      try {
-
-        const response =
-          await fetch(
-            LATEST_URL,
-            {
-              cache: "no-cache"
-            }
-          );
+      status.textContent =
+        "최신 버전을 확인하는 중...";
 
 
-        if (!response.ok) {
+      const response =
+        await fetch(
+          BASE_URL + "/latest.json",
+          {
+            cache: "no-store"
+          }
+        );
 
-          throw new Error(
-            "latest.json을 불러오지 못했습니다. HTTP " +
-            response.status
-          );
+
+      if (!response.ok) {
+
+        throw new Error(
+          "latest.json을 불러오지 못했습니다."
+        );
+
+      }
+
+
+      const latest =
+        await response.json();
+
+
+      if (
+        latest.version === undefined ||
+        latest.version === null
+      ) {
+
+        throw new Error(
+          "latest.json에 version이 없습니다."
+        );
+
+      }
+
+
+      return String(
+        latest.version
+      );
+
+    }
+
+
+    async function loadFlashConfig(
+      version
+    ) {
+
+      const url =
+        BASE_URL +
+        "/firmware/" +
+        encodeURIComponent(version) +
+        "/flash.json";
+
+
+      console.log(
+        "[flash] loading:",
+        url
+      );
+
+
+      const response =
+        await fetch(
+          url,
+          {
+            cache: "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "flash.json을 불러오지 못했습니다. " +
+          "HTTP " +
+          response.status
+        );
+
+      }
+
+
+      return await response.json();
+
+    }
+
+
+    function createManifest(
+      version,
+      flashConfig
+    ) {
+
+      if (
+        !flashConfig ||
+        !Array.isArray(
+          flashConfig.files
+        )
+      ) {
+
+        throw new Error(
+          "flash.json의 files 형식이 올바르지 않습니다."
+        );
+
+      }
+
+
+      const firmwareBase =
+        BASE_URL +
+        "/firmware/" +
+        encodeURIComponent(version) +
+        "/";
+
+
+      const parts = [];
+
+
+      for (
+        const file of flashConfig.files
+      ) {
+
+        if (
+          !file.name ||
+          !file.address
+        ) {
+
+          continue;
 
         }
 
 
-        const latest =
-          await response.json();
+        /*
+         * firmware.factory.bin은
+         * 사용하지 않습니다.
+         *
+         * factory image는 전체 영역을
+         * 덮어쓸 수 있으므로 NVS 보존 목적의
+         * 웹 업데이트에서는 제외합니다.
+         */
+
+        if (
+          file.name ===
+          "firmware.factory.bin"
+        ) {
+
+          console.log(
+            "[flash] skip:",
+            file.name
+          );
+
+          continue;
+
+        }
 
 
-        const version =
-          Number(
-            latest.version
+        const offset =
+          parseInt(
+            file.address,
+            16
           );
 
 
         if (
-          !Number.isInteger(
-            version
-          )
+          Number.isNaN(offset)
         ) {
 
           throw new Error(
-            "latest.json의 version 값이 올바르지 않습니다."
+            "잘못된 flash address: " +
+            file.address
           );
 
         }
 
 
-        selectedVersion =
-          version.toString();
+        parts.push({
+          path:
+            firmwareBase +
+            file.name,
+
+          offset:
+            offset
+        });
+
+
+        console.log(
+          "[flash] part:",
+          file.name,
+          "0x" +
+          offset.toString(16)
+        );
+
+      }
+
+
+      if (parts.length === 0) {
+
+        throw new Error(
+          "플래시할 파일이 없습니다."
+        );
+
+      }
+
+
+      /*
+       * ESP Web Tools용 manifest
+       *
+       * NVS는 parts에 넣지 않습니다.
+       *
+       * erase는 사용자에게 선택하게 합니다.
+       */
+
+      return {
+
+        name:
+          "BPM Converter",
+
+        version:
+          String(version),
+
+        new_install_prompt_erase:
+          true,
+
+        builds: [
+
+          {
+
+            chipFamily:
+              "ESP32",
+
+            improv:
+              false,
+
+            parts:
+              parts
+
+          }
+
+        ]
+
+      };
+
+    }
+
+
+    function setManifest(
+      manifest
+    ) {
+
+      /*
+       * 이전 Blob URL 제거
+       */
+
+      if (
+        manifestObjectUrl !== null
+      ) {
+
+        URL.revokeObjectURL(
+          manifestObjectUrl
+        );
+
+        manifestObjectUrl =
+          null;
+
+      }
+
+
+      const json =
+        JSON.stringify(
+          manifest
+        );
+
+
+      const blob =
+        new Blob(
+          [json],
+          {
+            type:
+              "application/json"
+          }
+        );
+
+
+      manifestObjectUrl =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      /*
+       * ESP Web Tools의 manifest
+       * 속성에 Blob URL을 지정합니다.
+       */
+
+      installButton.manifest =
+        manifestObjectUrl;
+
+
+      console.log(
+        "[manifest]",
+        manifest
+      );
+
+      console.log(
+        "[manifest URL]",
+        manifestObjectUrl
+      );
+
+    }
+
+
+    async function selectVersion(
+      version
+    ) {
+
+      status.textContent =
+        "펌웨어 정보를 읽는 중...";
+
+
+      const flashConfig =
+        await loadFlashConfig(
+          version
+        );
+
+
+      const manifest =
+        createManifest(
+          version,
+          flashConfig
+        );
+
+
+      setManifest(
+        manifest
+      );
+
+
+      versionInfo.textContent =
+        "Build " +
+        version +
+        " · " +
+        manifest.builds[0].parts.length +
+        "개 파일";
+
+
+      status.textContent =
+        "펌웨어를 설치할 준비가 되었습니다.";
+
+    }
+
+
+    async function loadPage() {
+
+      try {
+
+        const latestVersion =
+          await loadLatestVersion();
 
 
         versionSelect.innerHTML =
@@ -841,12 +631,11 @@
 
 
         option.value =
-          selectedVersion;
-
+          latestVersion;
 
         option.textContent =
           "Build " +
-          selectedVersion +
+          latestVersion +
           " (최신)";
 
 
@@ -855,11 +644,9 @@
         );
 
 
-        versionSelect.value =
-          selectedVersion;
-
-
-        await loadFlashConfig();
+        await selectVersion(
+          latestVersion
+        );
 
 
       } catch (error) {
@@ -869,81 +656,27 @@
         );
 
 
-        showStatus(
-          "펌웨어 정보를 불러오지 못했습니다.\n" +
-          error.message,
-          "error"
-        );
-
-      }
-
-    }
+        versionSelect.innerHTML =
+          "";
 
 
-    async function loadFlashConfig() {
-
-      if (!selectedVersion) {
-        return;
-      }
-
-
-      const url =
-        REPOSITORY_BASE +
-        "/firmware/" +
-        selectedVersion +
-        "/flash.json";
-
-
-      try {
-
-        const response =
-          await fetch(
-            url,
-            {
-              cache: "no-cache"
-            }
+        const option =
+          document.createElement(
+            "option"
           );
 
 
-        if (!response.ok) {
-
-          throw new Error(
-            "flash.json을 불러오지 못했습니다. HTTP " +
-            response.status
-          );
-
-        }
+        option.textContent =
+          "버전을 불러오지 못했습니다.";
 
 
-        flashConfig =
-          await response.json();
-
-
-        versionInfo.textContent =
-          "Build " +
-          selectedVersion;
-
-
-        flashButton.disabled =
-          !esploader;
-
-
-      } catch (error) {
-
-        flashConfig =
-          null;
-
-
-        console.error(
-          error
+        versionSelect.appendChild(
+          option
         );
 
 
-        showStatus(
-          "펌웨어 정보를 불러오지 못했습니다.\n" +
-          error.message,
-          "error"
-        );
+        status.textContent =
+          error.message;
 
       }
 
@@ -954,139 +687,20 @@
       "change",
       async () => {
 
-        selectedVersion =
+        const version =
           versionSelect.value;
 
 
-        flashConfig =
-          null;
-
-
-        flashButton.disabled =
-          true;
-
-
-        await loadFlashConfig();
-
-      }
-    );
-
-
-    connectButton.addEventListener(
-      "click",
-      async () => {
-
-        if (
-          !("serial" in navigator)
-        ) {
-
-          browserWarning.style.display =
-            "block";
-
-
+        if (!version) {
           return;
-
         }
 
 
         try {
 
-          connectButton.disabled =
-            true;
-
-
-          showStatus(
-            "USB 포트를 선택해 주세요."
+          await selectVersion(
+            version
           );
-
-
-          port =
-            await navigator.serial.requestPort();
-
-
-          terminalElement.textContent =
-            "";
-
-
-          terminalWriteLine(
-            "Serial port selected."
-          );
-
-
-          transport =
-            new Transport(
-              port,
-              true
-            );
-
-
-          esploader =
-            new ESPLoader({
-
-              transport:
-                transport,
-
-              baudrate:
-                115200,
-
-              terminal: {
-
-                clean() {
-                },
-
-                writeLine(data) {
-
-                  terminalWriteLine(
-                    data
-                  );
-
-                },
-
-                write(data) {
-
-                  terminalWrite(
-                    data
-                  );
-
-                }
-
-              },
-
-              debugLogging:
-                false
-
-            });
-
-
-          showStatus(
-            "ESP32에 연결하는 중..."
-          );
-
-
-          const chipName =
-            await esploader.main();
-
-
-          terminalWriteLine(
-            "Detected chip: " +
-            chipName
-          );
-
-
-          setConnected(
-            true,
-            chipName
-          );
-
-
-          showStatus(
-            "ESP32 연결 완료"
-          );
-
-
-          flashButton.disabled =
-            !flashConfig;
-
 
         } catch (error) {
 
@@ -1094,475 +708,40 @@
             error
           );
 
-
-          terminalWriteLine(
-            "ERROR: " +
-            error.message
-          );
-
-
-          setConnected(
-            false
-          );
-
-
-          showStatus(
-            "ESP32 연결 실패\n" +
-            error.message,
-            "error"
-          );
-
-
-          esploader =
-            null;
-
-
-          transport =
-            null;
-
-
-          port =
-            null;
+          status.textContent =
+            error.message;
 
         }
 
       }
     );
-
-
-    async function downloadBinary(
-      filename
-    ) {
-
-      const url =
-        REPOSITORY_BASE +
-        "/firmware/" +
-        selectedVersion +
-        "/" +
-        filename;
-
-
-      terminalWriteLine(
-        "Downloading: " +
-        filename
-      );
-
-
-      const response =
-        await fetch(
-          url
-        );
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          filename +
-          " 다운로드 실패. HTTP " +
-          response.status
-        );
-
-      }
-
-
-      const buffer =
-        await response.arrayBuffer();
-
-
-      terminalWriteLine(
-        "Downloaded: " +
-        filename +
-        " (" +
-        buffer.byteLength +
-        " bytes)"
-      );
-
-
-      return new Uint8Array(
-        buffer
-      );
-
-    }
-
-
-    flashButton.addEventListener(
-      "click",
-      async () => {
-
-        if (!esploader) {
-
-          showStatus(
-            "먼저 ESP32를 연결해 주세요.",
-            "error"
-          );
-
-
-          return;
-
-        }
-
-
-        if (!flashConfig) {
-
-          showStatus(
-            "펌웨어 정보를 불러오지 못했습니다.",
-            "error"
-          );
-
-
-          return;
-
-        }
-
-
-        const confirmed =
-          window.confirm(
-            "Build " +
-            selectedVersion +
-            "을 설치하시겠습니까?\n\n" +
-            "NVS 설정은 유지됩니다.\n" +
-            "설치 중에는 USB를 분리하지 마세요."
-          );
-
-
-        if (!confirmed) {
-          return;
-        }
-
-
-        try {
-
-          flashButton.disabled =
-            true;
-
-
-          connectButton.disabled =
-            true;
-
-
-          versionSelect.disabled =
-            true;
-
-
-          statusCard.style.display =
-            "block";
-
-
-          complete.style.display =
-            "none";
-
-
-          terminalContainer.style.display =
-            "block";
-
-
-          progressContainer.style.display =
-            "block";
-
-
-          setProgress(
-            0
-          );
-
-
-          terminalElement.textContent =
-            "";
-
-
-          terminalWriteLine(
-            "================================"
-          );
-
-
-          terminalWriteLine(
-            "BPM Converter Firmware"
-          );
-
-
-          terminalWriteLine(
-            "Build " +
-            selectedVersion
-          );
-
-
-          terminalWriteLine(
-            "================================"
-          );
-
-
-          terminalWriteLine(
-            ""
-          );
-
-
-          const fileArray =
-            [];
-
-
-          for (
-            const item of flashConfig.files
-          ) {
-
-            if (
-              item.name ===
-              "firmware.factory.bin"
-            ) {
-
-              terminalWriteLine(
-                "SKIP: firmware.factory.bin"
-              );
-
-
-              continue;
-
-            }
-
-
-            const data =
-              await downloadBinary(
-                item.name
-              );
-
-
-            const address =
-              Number(
-                item.address
-              );
-
-
-            if (
-              !Number.isInteger(
-                address
-              )
-            ) {
-
-              throw new Error(
-                "잘못된 flash address: " +
-                item.address
-              );
-
-            }
-
-
-            fileArray.push({
-
-              data:
-                data,
-
-              address:
-                address
-
-            });
-
-
-            terminalWriteLine(
-              "Flash: " +
-              item.name +
-              " @ " +
-              item.address
-            );
-
-          }
-
-
-          terminalWriteLine(
-            ""
-          );
-
-
-          terminalWriteLine(
-            "NVS is NOT included."
-          );
-
-
-          showStatus(
-            "펌웨어를 설치하는 중입니다..."
-          );
-
-
-          const flashOptions = {
-
-            fileArray:
-              fileArray,
-
-            flashMode:
-              "dio",
-
-            flashFreq:
-              "40m",
-
-            flashSize:
-              "4MB",
-
-            eraseAll:
-              false,
-
-            compress:
-              true,
-
-            reportProgress:
-              (
-                fileIndex,
-                written,
-                total
-              ) => {
-
-                const percent =
-                  (
-                    written /
-                    total
-                  ) * 100;
-
-
-                setProgress(
-                  percent
-                );
-
-              }
-
-          };
-
-
-          await esploader.writeFlash(
-            flashOptions
-          );
-
-
-          setProgress(
-            100
-          );
-
-
-          terminalWriteLine(
-            ""
-          );
-
-
-          terminalWriteLine(
-            "Flash completed."
-          );
-
-
-          await esploader.after(
-            "hard_reset"
-          );
-
-
-          terminalWriteLine(
-            "Device reset."
-          );
-
-
-          showStatus(
-            "펌웨어 설치가 완료되었습니다.",
-            "success"
-          );
-
-
-          complete.style.display =
-            "block";
-
-
-          completeText.textContent =
-            "Build " +
-            selectedVersion +
-            "이 설치되었습니다.\n" +
-            "ESP32가 재시작되었습니다.";
-
-
-        } catch (error) {
-
-          console.error(
-            error
-          );
-
-
-          terminalWriteLine(
-            ""
-          );
-
-
-          terminalWriteLine(
-            "ERROR: " +
-            error.message
-          );
-
-
-          showStatus(
-            "펌웨어 설치 실패\n" +
-            error.message,
-            "error"
-          );
-
-
-        } finally {
-
-          flashButton.disabled =
-            !flashConfig;
-
-
-          versionSelect.disabled =
-            false;
-
-
-          if (
-            esploader
-          ) {
-
-            connectButton.disabled =
-              true;
-
-          } else {
-
-            connectButton.disabled =
-              false;
-
-          }
-
-        }
-
-      }
-    );
-
-
-    if (
-      !("serial" in navigator)
-    ) {
-
-      browserWarning.style.display =
-        "block";
-
-
-      connectButton.disabled =
-        true;
-
-    }
 
 
     /*
-     * Make sure the CDN bundle actually loaded.
+     * 페이지를 떠날 때 Blob URL 정리
      */
 
-    if (
-      !window.esptool ||
-      !window.esptool.ESPLoader ||
-      !window.esptool.Transport
-    ) {
+    window.addEventListener(
+      "beforeunload",
+      () => {
 
-      showStatus(
-        "esptool-js를 불러오지 못했습니다.\n" +
-        "페이지를 새로고침해 주세요.",
-        "error"
-      );
+        if (
+          manifestObjectUrl !== null
+        ) {
 
-    } else {
+          URL.revokeObjectURL(
+            manifestObjectUrl
+          );
 
-      loadLatestVersion();
+        }
 
-    }
+      }
+    );
+
+
+    loadPage();
 
   </script>
 
 </body>
-
 </html>
