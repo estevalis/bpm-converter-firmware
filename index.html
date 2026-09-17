@@ -667,6 +667,10 @@
       null;
 
 
+    let currentManifestUrl =
+      null;
+
+
     async function getVersions() {
 
       const response =
@@ -716,6 +720,97 @@
     }
 
 
+    async function getFlashConfig(
+      version
+    ) {
+
+      const flashUrl =
+        `${BASE_URL}/firmware/${version}/flash.json`;
+
+
+      const response =
+        await fetch(
+          flashUrl,
+          {
+            cache: "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `Build ${version} flash.json HTTP ${response.status}`
+        );
+
+      }
+
+
+      return await response.json();
+
+    }
+
+
+    function createManifest(
+      version,
+      flashConfig
+    ) {
+
+      const parts =
+        flashConfig.files
+
+          .filter(
+            file =>
+              file.name !==
+              "firmware.factory.bin"
+          )
+
+          .map(
+            file => ({
+              path:
+                `${BASE_URL}/firmware/${version}/${file.name}`,
+
+              offset:
+                Number(
+                  file.address
+                )
+            })
+          );
+
+
+      return {
+
+        name:
+          "BPM Converter",
+
+        version:
+          String(version),
+
+        new_install_prompt_erase:
+          true,
+
+        builds: [
+
+          {
+
+            chipFamily:
+              "ESP32",
+
+            improv:
+              false,
+
+            parts:
+              parts
+
+          }
+
+        ]
+
+      };
+
+    }
+
+
     async function loadFirmware(
       version
     ) {
@@ -728,45 +823,50 @@
         "설치 준비 중...";
 
 
-      /*
-       * 각 Build 폴더에 있는
-       * 실제 manifest.json을 직접 사용합니다.
-       */
-
-      const manifestUrl =
-        `${BASE_URL}/firmware/${version}/manifest.json`;
+      const flashConfig =
+        await getFlashConfig(
+          version
+        );
 
 
-      /*
-       * manifest.json이 실제로 존재하는지
-       * 먼저 확인합니다.
-       *
-       * 최신 Build가 GitHub Pages에 아직
-       * 배포되지 않은 경우 404가 발생하고
-       * initialize()에서 다음 구버전으로
-       * 자동 fallback 합니다.
-       */
+      const manifest =
+        createManifest(
+          version,
+          flashConfig
+        );
 
-      const response =
-        await fetch(
-          manifestUrl,
+
+      const manifestJson =
+        JSON.stringify(
+          manifest
+        );
+
+
+      const blob =
+        new Blob(
+          [manifestJson],
           {
-            cache: "no-store"
+            type:
+              "application/json"
           }
         );
 
 
-      if (!response.ok) {
+      if (
+        currentManifestUrl
+      ) {
 
-        throw new Error(
-          `Build ${version} manifest.json HTTP ${response.status}`
+        URL.revokeObjectURL(
+          currentManifestUrl
         );
 
       }
 
 
-      const manifest =
-        await response.json();
+      currentManifestUrl =
+        URL.createObjectURL(
+          blob
+        );
 
 
       console.log(
@@ -776,8 +876,8 @@
 
 
       console.log(
-        "manifest URL:",
-        manifestUrl
+        "flash.json:",
+        flashConfig
       );
 
 
@@ -787,13 +887,14 @@
       );
 
 
-      /*
-       * Tasmota ESP Web Tools에는
-       * 실제 manifest.json URL을 전달합니다.
-       */
+      console.log(
+        "manifest URL:",
+        currentManifestUrl
+      );
+
 
       installButton.manifest =
-        manifestUrl;
+        currentManifestUrl;
 
 
       firmwareInfo.innerHTML =
@@ -812,7 +913,8 @@
       versions
     ) {
 
-      versionSelect.innerHTML = "";
+      versionSelect.innerHTML =
+        "";
 
 
       for (
@@ -865,11 +967,6 @@
         }
 
 
-        /*
-         * 가장 높은 Build 번호를
-         * 최신 버전으로 사용합니다.
-         */
-
         latestVersion =
           versions[0];
 
@@ -878,15 +975,6 @@
           versions
         );
 
-
-        /*
-         * 최신 버전부터 순서대로
-         * 실제 manifest.json을 확인합니다.
-         *
-         * 최신 버전이 아직 GitHub Pages에
-         * 올라오지 않아 404가 발생하더라도
-         * 구버전으로 자동 fallback 합니다.
-         */
 
         let loadedVersion =
           null;
@@ -929,11 +1017,6 @@
         }
 
 
-        /*
-         * 하나도 정상적으로 불러오지 못한 경우에만
-         * 전체 오류로 처리합니다.
-         */
-
         if (
           loadedVersion === null
         ) {
@@ -946,29 +1029,15 @@
         }
 
 
-        /*
-         * 실제로 로드에 성공한 버전을
-         * 선택합니다.
-         */
-
         versionSelect.value =
           String(
             loadedVersion
           );
 
 
-        /*
-         * 선택창은 항상 활성화합니다.
-         */
-
         versionSelect.disabled =
           false;
 
-
-        /*
-         * 최신 Build가 실제로 선택된 경우에만
-         * '최신' 표시를 합니다.
-         */
 
         if (
           loadedVersion ===
@@ -992,11 +1061,6 @@
           error
         );
 
-
-        /*
-         * 모든 버전이 실패한 경우에만
-         * 선택창을 비활성화합니다.
-         */
 
         versionSelect.disabled =
           true;
@@ -1068,6 +1132,7 @@
 
 
     initialize();
+
 
   </script>
 
