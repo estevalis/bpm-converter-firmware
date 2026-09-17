@@ -12,43 +12,6 @@
 
   <title>BPM Converter Firmware</title>
 
-  <script>
-  /*
-   * ESP Web Tools 10.x가 내부적으로 생성하는
-   * window.esploader의 baudrate를 가로채서
-   * 1.5 Mbps로 변경합니다.
-   *
-   * ESP Web Tools 소스 수정 없이 index.html만으로 처리합니다.
-   */
-
-  let _espLoader = null;
-
-  Object.defineProperty(
-    window,
-    "esploader",
-    {
-      configurable: true,
-
-      get() {
-        return _espLoader;
-      },
-
-      set(loader) {
-        _espLoader = loader;
-
-        if (loader) {
-          loader.baudrate = 1500000;
-
-          console.log(
-            "[BPM Converter] ESP Web Tools baudrate:",
-            loader.baudrate
-          );
-        }
-      }
-    }
-  );
-</script>
-
   <script
     type="module"
     src="https://unpkg.com/tasmota-esp-web-tools/dist/web/install-button.js?module"
