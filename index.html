@@ -959,75 +959,167 @@
 
 
     async function initialize() {
-
+    
       try {
-
+    
         const versions =
           await getVersions();
-
-
+    
+    
         if (
           versions.length === 0
         ) {
-
+    
           throw new Error(
             "설치 가능한 펌웨어가 없습니다."
           );
-
+    
         }
-
-
+    
+    
         /*
          * 가장 높은 Build 번호를
          * 최신 버전으로 사용합니다.
          */
-
+    
         latestVersion =
           versions[0];
-
-
+    
+    
         populateVersions(
           versions
         );
-
-
+    
+    
+        /*
+         * 최신 버전부터 순서대로
+         * flash.json을 확인합니다.
+         *
+         * 최신 버전이 아직 GitHub Pages에
+         * 올라오지 않아 404가 발생하더라도
+         * 구버전으로 자동 fallback 합니다.
+         */
+    
+        let loadedVersion =
+          null;
+    
+        let lastError =
+          null;
+    
+    
+        for (
+          const version of versions
+        ) {
+    
+          try {
+    
+            await loadFirmware(
+              version
+            );
+    
+            loadedVersion =
+              version;
+    
+            break;
+    
+          } catch (error) {
+    
+            console.warn(
+              `Build ${version}을 불러오지 못했습니다:`,
+              error
+            );
+    
+            lastError =
+              error;
+    
+          }
+    
+        }
+    
+    
+        /*
+         * 하나도 정상적으로 불러오지 못한 경우에만
+         * 전체 오류로 처리합니다.
+         */
+    
+        if (
+          loadedVersion === null
+        ) {
+    
+          throw lastError ||
+            new Error(
+              "사용 가능한 펌웨어가 없습니다."
+            );
+    
+        }
+    
+    
+        /*
+         * 실제로 로드에 성공한 버전을 선택합니다.
+         */
+    
         versionSelect.value =
           String(
-            latestVersion
+            loadedVersion
           );
-
-
-        latestBadge.style.display =
-          "inline-block";
-
-
-        await loadFirmware(
+    
+    
+        /*
+         * 선택창은 항상 활성화합니다.
+         */
+    
+        versionSelect.disabled =
+          false;
+    
+    
+        /*
+         * 최신 Build가 실제로 선택된 경우에만
+         * '최신' 표시를 합니다.
+         */
+    
+        if (
+          loadedVersion ===
           latestVersion
-        );
-
-
+        ) {
+    
+          latestBadge.style.display =
+            "inline-block";
+    
+        } else {
+    
+          latestBadge.style.display =
+            "none";
+    
+        }
+    
+    
       } catch (error) {
-
+    
         console.error(
           error
         );
-
-
+    
+    
+        /*
+         * 모든 버전이 실패한 경우에만
+         * 선택창을 비활성화합니다.
+         */
+    
         versionSelect.disabled =
           true;
-
-
+    
+    
         firmwareInfo.innerHTML =
           `<span class="error">${
             error.message
           }</span>`;
-
-
+    
+    
         messageElement.textContent =
           "";
-
+    
       }
-
+    
     }
 
 
