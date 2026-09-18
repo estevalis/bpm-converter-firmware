@@ -538,15 +538,30 @@
       <div class="warning">
 
         <strong>
-          ⚠ 설정을 유지하려면
+          ⚠ NVS 설정
         </strong>
 
-        설치 과정에서
-        <b>Erase</b>를 선택하지 마세요.
+        <label
+          for="nvsOption"
+          style="display: block; margin-bottom: 8px;"
+        >
+          Wi-Fi 및 장치 설정이 저장된 NVS 영역을 어떻게 처리할지 선택하세요.
+        </label>
 
-        Wi-Fi 및 장치 설정이 저장된
-        NVS 영역은 플래싱 대상에서 제외되어
-        기존 설정을 유지하도록 구성되어 있습니다.
+        <select
+          id="nvsOption"
+          style="width: 100%; padding: 10px 12px; border: 1px solid var(--warning-border); border-radius: 8px; background: #fff; color: var(--text); font: inherit;"
+        >
+          <option value="keep" selected>NVS 삭제 안함 (기본값)</option>
+          <option value="erase">NVS 초기화</option>
+        </select>
+
+        <div
+          id="nvsDescription"
+          style="margin-top: 8px;"
+        >
+          기존 Wi-Fi 및 장치 설정을 유지한 상태로 펌웨어를 설치합니다.
+        </div>
 
       </div>
 
@@ -649,6 +664,18 @@
       );
 
 
+    const nvsOption =
+      document.getElementById(
+        "nvsOption"
+      );
+
+
+    const nvsDescription =
+      document.getElementById(
+        "nvsDescription"
+      );
+
+
     let latestVersion =
       null;
 
@@ -705,7 +732,10 @@
             b - a
         )
 
-        .slice(0, 10);
+        .slice(
+          0,
+          10
+        );
 
     }
 
@@ -795,7 +825,8 @@
       versions
     ) {
 
-      versionSelect.innerHTML = "";
+      versionSelect.innerHTML =
+        "";
 
 
       for (
@@ -858,6 +889,7 @@
             "Skipping factory image:",
             file.name
           );
+
 
           continue;
 
@@ -930,7 +962,9 @@
       return {
 
         clean() {
+
           console.clear();
+
         },
 
 
@@ -985,6 +1019,10 @@
 
 
       versionSelect.disabled =
+        true;
+
+
+      nvsOption.disabled =
         true;
 
 
@@ -1125,27 +1163,25 @@
 
 
         messageElement.textContent =
-          `펌웨어 설치 중... 0%`;
+          `펌웨어 설치 중... 0/${fileArray.length}, 0%`;
 
 
         /*
          * 중요:
          *
-         * eraseAll: false
-         *
+         * NVS 삭제 안함:
          * 전체 Flash erase를 하지 않습니다.
          *
-         * 또한 flash.json에 지정된 주소의
-         * 파일만 기록합니다.
-         *
-         * 따라서 NVS 영역 자체를
-         * 별도로 erase하지 않습니다.
+         * NVS 초기화:
+         * 전체 Flash erase 후
+         * flash.json에 지정된 파일을 기록합니다.
          */
 
         await esploader.writeFlash({
 
           fileArray:
             flashFiles,
+
 
           /*
            * 이미지에 기록된 flash 설정을
@@ -1155,14 +1191,23 @@
           flashMode:
             "keep",
 
+
           flashFreq:
             "keep",
+
 
           flashSize:
             "keep",
 
+
+          /*
+           * NVS 초기화를 선택하면
+           * 전체 Flash를 먼저 erase합니다.
+           */
+
           eraseAll:
-            false,
+            nvsOption.value === "erase",
+
 
           /*
            * 전송 데이터 압축을 사용합니다.
@@ -1196,7 +1241,7 @@
 
             messageElement.textContent =
               `Build ${version} 설치 중... ` +
-              `${percent}%`;
+              `${fileIndex + 1}/${fileArray.length}, ${percent}%`;
 
 
             console.log(
@@ -1215,10 +1260,36 @@
         /*
          * 플래싱 완료 후 ESP32를
          * 하드 리셋합니다.
+         *
+         * RTS를 직접 LOW -> HIGH로 펄스하여
+         * EN 핀을 확실하게 리셋합니다.
          */
 
-        await esploader.after(
-          "hard_reset"
+        await transport.setRTS(
+          true
+        );
+
+
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              100
+            )
+        );
+
+
+        await transport.setRTS(
+          false
+        );
+
+
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              300
+            )
         );
 
 
@@ -1339,6 +1410,10 @@
 
 
         installButton.disabled =
+          false;
+
+
+        nvsOption.disabled =
           false;
 
       }
@@ -1544,6 +1619,29 @@
       }
 
     }
+
+
+    nvsOption.addEventListener(
+      "change",
+      () => {
+
+        if (
+          nvsOption.value ===
+          "erase"
+        ) {
+
+          nvsDescription.textContent =
+            "기존 Flash 데이터를 모두 초기화한 후 펌웨어를 설치합니다. Wi-Fi 및 장치 설정도 삭제됩니다.";
+
+        } else {
+
+          nvsDescription.textContent =
+            "기존 Wi-Fi 및 장치 설정을 유지한 상태로 펌웨어를 설치합니다.";
+
+        }
+
+      }
+    );
 
 
     versionSelect.addEventListener(
