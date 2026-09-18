@@ -1,0 +1,30 @@
+{
+  "build_date": "2026-09-18",
+  "build_time": "17:58:21",
+  "files": [
+    {
+      "name": "bootloader.bin",
+      "address": "0x1000"
+    },
+    {
+      "name": "partitions.bin",
+      "address": "0x8000"
+    },
+    {
+      "name": "boot_app0.bin",
+      "address": "0xE000"
+    },
+    {
+      "name": "firmware.bin",
+      "address": "0x10000"
+    },
+    {
+      "name": "littlefs.bin",
+      "address": "0x290000"
+    }
+  ],
+  "preserve": [
+    "nvs"
+  ],
+  "commit_message": "네임박스 텍스트 위치조정"
+}
