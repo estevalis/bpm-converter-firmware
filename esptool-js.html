@@ -682,6 +682,9 @@
 
     let currentFlashConfig =
       null;
+    
+    const flashConfigCache =
+      new Map();
 
 
     let flashing =
@@ -743,10 +746,14 @@
     async function getFlashConfig(
       version
     ) {
+      if (
+        flashConfigCache.has(version)
+      ) {
+        return flashConfigCache.get(version);
+      }
 
       const url =
         `${BASE_URL}/firmware/${version}/flash.json`;
-
 
       const response =
         await fetch(
@@ -756,20 +763,22 @@
           }
         );
 
-
       if (!response.ok) {
-
         throw new Error(
           `Build ${version} flash.json HTTP ${response.status}`
         );
-
       }
 
+      const config =
+        await response.json();
 
-      return await response.json();
+      flashConfigCache.set(
+        version,
+        config
+      );
 
+      return config;
     }
-
 
     async function loadFirmware(
       version
@@ -859,6 +868,69 @@
 
     }
 
+    async function updateVersionDates(
+      versions
+    ) {
+      await Promise.all(
+        versions.map(
+          async version => {
+            try {
+              const config =
+                await getFlashConfig(
+                  version
+                );
+
+              const option =
+                versionSelect.querySelector(
+                  `option[value="${version}"]`
+                );
+
+              if (
+                !option
+              ) {
+                return;
+              }
+
+              const buildDate =
+                config.build_date;
+
+              const buildTime =
+                config.build_time;
+
+              if (
+                buildDate &&
+                buildTime
+              ) {
+                option.textContent =
+                  `Build ${version}    ${buildDate} ${buildTime}`;
+              } else if (
+                buildDate
+              ) {
+                option.textContent =
+                  `Build ${version}    ${buildDate}`;
+              } else if (
+                buildTime
+              ) {
+                option.textContent =
+                  `Build ${version}    ${buildTime}`;
+              }
+
+            } catch (
+              error
+            ) {
+              /*
+              * flash.json이 없는 Build는
+              * 날짜 없이 Build 번호만 표시합니다.
+              */
+              console.warn(
+                `Build ${version} 날짜 정보를 불러오지 못했습니다:`,
+                error
+              );
+            }
+          }
+        )
+      );
+    }
 
     async function fetchFlashFiles(
       version,
@@ -1475,7 +1547,10 @@
         populateVersions(
           versions
         );
-
+        
+        updateVersionDates(
+          versions
+        );
 
         /*
          * 최신 버전부터 순서대로
