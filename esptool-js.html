@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>BPM Converter Firmware</title>
+
+
+  <style>
+
+    :root {
+      --bg: #f3f5f8;
+      --card: #ffffff;
+      --text: #20242a;
+      --muted: #707780;
+      --line: #e1e5ea;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --warning-bg: #fff8e6;
+      --warning-border: #f0d48a;
+      --warning-text: #735c16;
+    }
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+
+      min-height: 100vh;
+
+      background:
+        linear-gradient(
+          180deg,
+          #eef3ff 0,
+          var(--bg) 280px
+        );
+
+      color: var(--text);
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Noto Sans KR",
+        sans-serif;
+    }
+
+
+    .container {
+      width: min(
+        520px,
+        calc(100% - 32px)
+      );
+
+      margin: 0 auto;
+
+      padding:
+        48px 0
+        60px;
+    }
+
+
+    .header {
+      text-align: center;
+
+      margin-bottom: 28px;
+    }
+
+
+    .logo {
+      width: 64px;
+      height: 64px;
+
+      margin: 0 auto 18px;
+
+      border-radius: 18px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        linear-gradient(
+          135deg,
+          #2563eb,
+          #4f46e5
+        );
+
+      color: white;
+
+      font-size: 22px;
+      font-weight: 800;
+
+      box-shadow:
+        0 10px 24px
+        rgba(37, 99, 235, 0.25);
+    }
+
+
+    h1 {
+      margin: 0;
+
+      font-size: 28px;
+      line-height: 1.2;
+
+      letter-spacing: -0.03em;
+    }
+
+
+    .subtitle {
+      margin-top: 8px;
+
+      color: var(--muted);
+
+      font-size: 14px;
+    }
+
+
+    .card {
+      background: var(--card);
+
+      border:
+        1px solid
+        rgba(0, 0, 0, 0.06);
+
+      border-radius: 18px;
+
+      padding: 24px;
+
+      box-shadow:
+        0 10px 30px
+        rgba(30, 40, 60, 0.08);
+    }
+
+
+    .section-title {
+      margin-bottom: 10px;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      color: var(--muted);
+    }
+
+
+    .version-box {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+    }
+
+
+    select {
+      flex: 1;
+
+      appearance: none;
+
+      padding:
+        13px 42px 13px 14px;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius: 10px;
+
+      background:
+        #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='%23707780' d='m7 10 5 5 5-5z'/%3E%3C/svg%3E")
+        no-repeat;
+
+      background-position:
+        right 14px center;
+
+      color: var(--text);
+
+      font-size: 16px;
+
+      cursor: pointer;
+    }
+
+
+    select:focus {
+      outline: none;
+
+      border-color:
+        var(--accent);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.12);
+    }
+
+
+    select:disabled {
+      background-color: #f7f8fa;
+
+      color: var(--muted);
+
+      cursor: default;
+    }
+
+
+    .latest {
+      flex: none;
+
+      padding:
+        5px 9px;
+
+      border-radius: 20px;
+
+      background:
+        #eaf1ff;
+
+      color:
+        var(--accent);
+
+      font-size: 12px;
+
+      font-weight: 700;
+    }
+
+
+    .firmware-info {
+      margin-top: 18px;
+
+      padding: 14px 16px;
+
+      border-radius: 10px;
+
+      background: #f7f8fa;
+
+      color: var(--muted);
+
+      font-size: 13px;
+
+      line-height: 1.6;
+    }
+
+
+    .firmware-info strong {
+      color: var(--text);
+    }
+
+
+    .install-area {
+      margin-top: 24px;
+
+      padding-top: 24px;
+
+      border-top:
+        1px solid
+        var(--line);
+
+      text-align: center;
+    }
+
+
+    #installButton {
+      width: 100%;
+
+      min-height: 50px;
+
+      padding:
+        13px 20px;
+
+      border: none;
+
+      border-radius: 11px;
+
+      background:
+        var(--accent);
+
+      color: white;
+
+      font-family: inherit;
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        background 0.15s,
+        transform 0.1s;
+    }
+
+
+    #installButton:hover:not(:disabled) {
+      background:
+        var(--accent-dark);
+    }
+
+
+    #installButton:active:not(:disabled) {
+      transform:
+        scale(0.98);
+    }
+
+
+    #installButton:disabled {
+      background:
+        #aeb8c8;
+
+      cursor:
+        default;
+    }
+
+
+    .message {
+      margin-top: 12px;
+
+      color: var(--muted);
+
+      font-size: 13px;
+
+      line-height: 1.6;
+    }
+
+
+    .warning {
+      margin-top: 18px;
+
+      padding: 16px;
+
+      border:
+        1px solid
+        var(--warning-border);
+
+      border-radius: 12px;
+
+      background:
+        var(--warning-bg);
+
+      color:
+        var(--warning-text);
+
+      font-size: 13px;
+
+      line-height: 1.65;
+    }
+
+
+    .warning strong {
+      display: block;
+
+      margin-bottom: 4px;
+
+      font-size: 14px;
+    }
+
+
+    .steps {
+      margin-top: 20px;
+
+      display: grid;
+
+      gap: 10px;
+    }
+
+
+    .step {
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+      color: var(--muted);
+
+      font-size: 13px;
+    }
+
+
+    .step-number {
+      flex:
+        0 0 26px;
+
+      width: 26px;
+      height: 26px;
+
+      border-radius: 50%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        #edf2ff;
+
+      color:
+        var(--accent);
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+
+    .footer {
+      margin-top: 24px;
+
+      text-align: center;
+
+      color: #969ca4;
+
+      font-size: 12px;
+    }
+
+
+    .error {
+      color: #c62828;
+    }
+
+
+    @media (
+      max-width: 480px
+    ) {
+
+      .container {
+        width:
+          calc(100% - 24px);
+
+        padding-top: 32px;
+      }
+
+
+      .card {
+        padding: 20px;
+      }
+
+
+      h1 {
+        font-size: 25px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <main class="container">
+
+
+    <header class="header">
+
+      <div class="logo">
+        BPM
+      </div>
+
+      <h1>
+        BPM Converter
+      </h1>
+
+      <div class="subtitle">
+        Firmware Installer
+      </div>
+
+    </header>
+
+
+    <section class="card">
+
+
+      <div class="section-title">
+        펌웨어 버전
+      </div>
+
+
+      <div class="version-box">
+
+        <select
+          id="versionSelect"
+          disabled
+        ></select>
+
+        <span
+          id="latestBadge"
+          class="latest"
+          style="display: none;"
+        >
+          최신
+        </span>
+
+      </div>
+
+
+      <div
+        id="firmwareInfo"
+        class="firmware-info"
+      >
+        펌웨어 목록을 불러오는 중...
+      </div>
+
+
+      <div class="install-area">
+
+
+        <button
+          id="installButton"
+          disabled
+        >
+          USB로 펌웨어 설치
+        </button>
+
+
+        <div
+          id="message"
+          class="message"
+        >
+          USB로 ESP32를 연결한 후
+          설치 버튼을 눌러주세요.
+        </div>
+
+
+      </div>
+
+
+      <div class="warning">
+
+        <strong>
+          ⚠ 설정을 유지하려면
+        </strong>
+
+        설치 과정에서
+        <b>Erase</b>를 선택하지 마세요.
+
+        Wi-Fi 및 장치 설정이 저장된
+        NVS 영역은 플래싱 대상에서 제외되어
+        기존 설정을 유지하도록 구성되어 있습니다.
+
+      </div>
+
+
+      <div class="steps">
+
+        <div class="step">
+
+          <span class="step-number">
+            1
+          </span>
+
+          ESP32를 USB로 연결합니다.
+
+        </div>
+
+
+        <div class="step">
+
+          <span class="step-number">
+            2
+          </span>
+
+          원하는 펌웨어 버전을 선택합니다.
+
+        </div>
+
+
+        <div class="step">
+
+          <span class="step-number">
+            3
+          </span>
+
+          설치 버튼을 눌러 진행합니다.
+
+        </div>
+
+      </div>
+
+
+    </section>
+
+
+    <div class="footer">
+      BPM Converter Firmware
+    </div>
+
+
+  </main>
+
+
+  <script type="module">
+
+    import {
+      ESPLoader,
+      Transport
+    } from "https://unpkg.com/esptool-js@0.6.1/bundle.js";
+
+
+    const BASE_URL =
+      "https://estevalis.github.io/bpm-converter-firmware";
+
+
+    const GITHUB_API_URL =
+      "https://api.github.com/repos/estevalis/bpm-converter-firmware/contents/firmware";
+
+
+    const BAUDRATE =
+      1500000;
+
+
+    const versionSelect =
+      document.getElementById(
+        "versionSelect"
+      );
+
+
+    const firmwareInfo =
+      document.getElementById(
+        "firmwareInfo"
+      );
+
+
+    const messageElement =
+      document.getElementById(
+        "message"
+      );
+
+
+    const latestBadge =
+      document.getElementById(
+        "latestBadge"
+      );
+
+
+    const installButton =
+      document.getElementById(
+        "installButton"
+      );
+
+
+    let latestVersion =
+      null;
+
+
+    let currentFlashConfig =
+      null;
+
+
+    let flashing =
+      false;
+
+
+    async function getVersions() {
+
+      const response =
+        await fetch(
+          GITHUB_API_URL,
+          {
+            cache: "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `GitHub API HTTP ${response.status}`
+        );
+
+      }
+
+
+      const files =
+        await response.json();
+
+
+      return files
+
+        .filter(
+          item =>
+            item.type === "dir" &&
+            /^\d+$/.test(
+              item.name
+            )
+        )
+
+        .map(
+          item =>
+            Number(item.name)
+        )
+
+        .sort(
+          (a, b) =>
+            b - a
+        )
+
+        .slice(0, 10);
+
+    }
+
+
+    async function getFlashConfig(
+      version
+    ) {
+
+      const url =
+        `${BASE_URL}/firmware/${version}/flash.json`;
+
+
+      const response =
+        await fetch(
+          url,
+          {
+            cache: "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `Build ${version} flash.json HTTP ${response.status}`
+        );
+
+      }
+
+
+      return await response.json();
+
+    }
+
+
+    async function loadFirmware(
+      version
+    ) {
+
+      firmwareInfo.textContent =
+        `Build ${version}의 펌웨어 정보를 확인하는 중...`;
+
+
+      messageElement.textContent =
+        "설치 준비 중...";
+
+
+      const flashConfig =
+        await getFlashConfig(
+          version
+        );
+
+
+      currentFlashConfig =
+        flashConfig;
+
+
+      console.log(
+        "Build:",
+        version
+      );
+
+
+      console.log(
+        "flash.json:",
+        flashConfig
+      );
+
+
+      firmwareInfo.innerHTML =
+        `<strong>Build ${version}</strong><br>` +
+        `ESP32용 펌웨어입니다.`;
+
+
+      messageElement.innerHTML =
+        "USB로 ESP32를 연결한 후<br>" +
+        "설치 버튼을 눌러주세요.";
+
+
+      installButton.disabled =
+        false;
+
+    }
+
+
+    function populateVersions(
+      versions
+    ) {
+
+      versionSelect.innerHTML = "";
+
+
+      for (
+        const version of versions
+      ) {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          String(version);
+
+
+        option.textContent =
+          `Build ${version}`;
+
+
+        versionSelect.appendChild(
+          option
+        );
+
+      }
+
+
+      versionSelect.disabled =
+        false;
+
+    }
+
+
+    async function fetchFlashFiles(
+      version,
+      flashConfig
+    ) {
+
+      const files = [];
+
+
+      for (
+        const file of flashConfig.files
+      ) {
+
+        /*
+         * factory 이미지는 사용하지 않습니다.
+         *
+         * factory 이미지는 0x000000부터
+         * 전체 이미지를 플래싱할 수 있으므로
+         * NVS를 포함한 영역을 덮어쓸 가능성이 있습니다.
+         */
+
+        if (
+          file.name ===
+          "firmware.factory.bin"
+        ) {
+
+          console.log(
+            "Skipping factory image:",
+            file.name
+          );
+
+          continue;
+
+        }
+
+
+        const url =
+          `${BASE_URL}/firmware/${version}/${file.name}`;
+
+
+        messageElement.textContent =
+          `${file.name} 다운로드 중...`;
+
+
+        console.log(
+          "Downloading:",
+          url
+        );
+
+
+        const response =
+          await fetch(
+            url,
+            {
+              cache: "no-store"
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `${file.name} HTTP ${response.status}`
+          );
+
+        }
+
+
+        const buffer =
+          await response.arrayBuffer();
+
+
+        files.push({
+
+          data:
+            new Uint8Array(
+              buffer
+            ),
+
+          address:
+            Number(
+              file.address
+            ),
+
+          name:
+            file.name
+
+        });
+
+      }
+
+
+      return files;
+
+    }
+
+
+    function createTerminal() {
+
+      return {
+
+        clean() {
+          console.clear();
+        },
+
+
+        writeLine(data) {
+
+          console.log(
+            data
+          );
+
+        },
+
+
+        write(data) {
+
+          console.log(
+            data
+          );
+
+        }
+
+      };
+
+    }
+
+
+    async function installFirmware() {
+
+      if (
+        flashing
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !currentFlashConfig
+      ) {
+
+        return;
+
+      }
+
+
+      flashing =
+        true;
+
+
+      installButton.disabled =
+        true;
+
+
+      versionSelect.disabled =
+        true;
+
+
+      let port =
+        null;
+
+
+      let transport =
+        null;
+
+
+      try {
+
+        const version =
+          Number(
+            versionSelect.value
+          );
+
+
+        /*
+         * 먼저 USB 포트를 선택합니다.
+         */
+
+        messageElement.textContent =
+          "USB 포트를 선택해 주세요.";
+
+
+        port =
+          await navigator.serial.requestPort();
+
+
+        /*
+         * esptool-js Transport를 생성합니다.
+         */
+
+        transport =
+          new Transport(
+            port,
+            true
+          );
+
+
+        /*
+         * 1,500,000 baud를 사용합니다.
+         */
+
+        const esploader =
+          new ESPLoader({
+
+            transport:
+              transport,
+
+            baudrate:
+              BAUDRATE,
+
+            terminal:
+              createTerminal(),
+
+            debugLogging:
+              false
+
+          });
+
+
+        messageElement.textContent =
+          `ESP32에 연결하는 중... (${BAUDRATE.toLocaleString()} baud)`;
+
+
+        /*
+         * ESP32 칩을 감지합니다.
+         *
+         * 연결 과정에서 필요하면
+         * bootloader mode로 전환합니다.
+         */
+
+        const chipName =
+          await esploader.main();
+
+
+        console.log(
+          "Connected to:",
+          chipName
+        );
+
+
+        messageElement.textContent =
+          `${chipName} 연결됨. 펌웨어를 준비하는 중...`;
+
+
+        /*
+         * flash.json에 지정된 모든 BIN을
+         * 다운로드합니다.
+         *
+         * firmware.factory.bin은 제외됩니다.
+         */
+
+        const fileArray =
+          await fetchFlashFiles(
+            version,
+            currentFlashConfig
+          );
+
+
+        if (
+          fileArray.length === 0
+        ) {
+
+          throw new Error(
+            "플래싱할 펌웨어 파일이 없습니다."
+          );
+
+        }
+
+
+        console.log(
+          "Flash files:",
+          fileArray
+        );
+
+
+        /*
+         * esptool-js가 요구하는
+         * data/address 배열만 추출합니다.
+         */
+
+        const flashFiles =
+          fileArray.map(
+            file => ({
+
+              data:
+                file.data,
+
+              address:
+                file.address
+
+            })
+          );
+
+
+        messageElement.textContent =
+          `펌웨어 설치 중... 0%`;
+
+
+        /*
+         * 중요:
+         *
+         * eraseAll: false
+         *
+         * 전체 Flash erase를 하지 않습니다.
+         *
+         * 또한 flash.json에 지정된 주소의
+         * 파일만 기록합니다.
+         *
+         * 따라서 NVS 영역 자체를
+         * 별도로 erase하지 않습니다.
+         */
+
+        await esploader.writeFlash({
+
+          fileArray:
+            flashFiles,
+
+          /*
+           * 이미지에 기록된 flash 설정을
+           * 유지합니다.
+           */
+
+          flashMode:
+            "keep",
+
+          flashFreq:
+            "keep",
+
+          flashSize:
+            "keep",
+
+          eraseAll:
+            false,
+
+          /*
+           * 전송 데이터 압축을 사용합니다.
+           */
+
+          compress:
+            true,
+
+
+          reportProgress(
+            fileIndex,
+            written,
+            total
+          ) {
+
+            const percent =
+              total > 0
+                ? Math.round(
+                    written /
+                    total *
+                    100
+                  )
+                : 0;
+
+
+            const file =
+              fileArray[
+                fileIndex
+              ];
+
+
+            messageElement.textContent =
+              `Build ${version} 설치 중... ` +
+              `${percent}%`;
+
+
+            console.log(
+              `Writing ${file.name}: ${percent}%`
+            );
+
+          }
+
+        });
+
+
+        messageElement.textContent =
+          "펌웨어 설치 완료. ESP32를 재시작하는 중...";
+
+
+        /*
+         * 플래싱 완료 후 ESP32를
+         * 하드 리셋합니다.
+         */
+
+        await esploader.after(
+          "hard_reset"
+        );
+
+
+        messageElement.textContent =
+          "펌웨어 설치가 완료되었습니다.";
+
+
+        firmwareInfo.innerHTML =
+          `<strong>Build ${version}</strong><br>` +
+          `펌웨어 설치가 완료되었습니다.`;
+
+
+        console.log(
+          "Firmware flashing completed."
+        );
+
+
+        /*
+         * 잠시 후 Serial transport를 닫습니다.
+         */
+
+        try {
+
+          await transport.disconnect();
+
+        } catch (
+          disconnectError
+        ) {
+
+          console.warn(
+            "Disconnect warning:",
+            disconnectError
+          );
+
+        }
+
+
+      } catch (
+        error
+      ) {
+
+        console.error(
+          "Firmware installation failed:",
+          error
+        );
+
+
+        let errorMessage =
+          error &&
+          error.message
+            ? error.message
+            : String(
+                error
+              );
+
+
+        /*
+         * 사용자가 포트 선택창에서
+         * 취소한 경우 별도의 오류처럼
+         * 보이지 않게 합니다.
+         */
+
+        if (
+          errorMessage
+            .toLowerCase()
+            .includes(
+              "cancel"
+            )
+        ) {
+
+          messageElement.textContent =
+            "USB 포트 선택이 취소되었습니다.";
+
+        } else {
+
+          messageElement.innerHTML =
+            `<span class="error">` +
+            `설치 실패: ${errorMessage}` +
+            `</span>`;
+
+        }
+
+
+        /*
+         * 오류가 발생했더라도
+         * 연결되어 있다면 정리합니다.
+         */
+
+        if (
+          transport
+        ) {
+
+          try {
+
+            await transport.disconnect();
+
+          } catch (
+            disconnectError
+          ) {
+
+            console.warn(
+              "Disconnect warning:",
+              disconnectError
+            );
+
+          }
+
+        }
+
+      } finally {
+
+        flashing =
+          false;
+
+
+        versionSelect.disabled =
+          false;
+
+
+        installButton.disabled =
+          false;
+
+      }
+
+    }
+
+
+    async function initialize() {
+
+      /*
+       * Web Serial 지원 여부를 확인합니다.
+       */
+
+      if (
+        !("serial" in navigator)
+      ) {
+
+        firmwareInfo.innerHTML =
+          `<span class="error">` +
+          `이 브라우저에서는 Web Serial을 지원하지 않습니다.` +
+          `</span>`;
+
+
+        messageElement.innerHTML =
+          "데스크톱 Chrome 또는 Edge를 사용해 주세요.";
+
+
+        return;
+
+      }
+
+
+      try {
+
+        const versions =
+          await getVersions();
+
+
+        if (
+          versions.length === 0
+        ) {
+
+          throw new Error(
+            "설치 가능한 펌웨어가 없습니다."
+          );
+
+        }
+
+
+        /*
+         * 가장 높은 Build 번호를
+         * 최신 버전으로 사용합니다.
+         */
+
+        latestVersion =
+          versions[0];
+
+
+        populateVersions(
+          versions
+        );
+
+
+        /*
+         * 최신 버전부터 순서대로
+         * flash.json을 확인합니다.
+         *
+         * 최신 버전이 아직 GitHub Pages에
+         * 올라오지 않아 404가 발생하더라도
+         * 구버전으로 자동 fallback 합니다.
+         */
+
+        let loadedVersion =
+          null;
+
+
+        let lastError =
+          null;
+
+
+        for (
+          const version of versions
+        ) {
+
+          try {
+
+            await loadFirmware(
+              version
+            );
+
+
+            loadedVersion =
+              version;
+
+
+            break;
+
+          } catch (
+            error
+          ) {
+
+            console.warn(
+              `Build ${version}을 불러오지 못했습니다:`,
+              error
+            );
+
+
+            lastError =
+              error;
+
+          }
+
+        }
+
+
+        /*
+         * 하나도 정상적으로 불러오지 못한 경우에만
+         * 전체 오류로 처리합니다.
+         */
+
+        if (
+          loadedVersion === null
+        ) {
+
+          throw lastError ||
+            new Error(
+              "사용 가능한 펌웨어가 없습니다."
+            );
+
+        }
+
+
+        /*
+         * 실제로 로드에 성공한 버전을 선택합니다.
+         */
+
+        versionSelect.value =
+          String(
+            loadedVersion
+          );
+
+
+        /*
+         * 선택창은 항상 활성화합니다.
+         */
+
+        versionSelect.disabled =
+          false;
+
+
+        /*
+         * 최신 Build가 실제로 선택된 경우에만
+         * '최신' 표시를 합니다.
+         */
+
+        if (
+          loadedVersion ===
+          latestVersion
+        ) {
+
+          latestBadge.style.display =
+            "inline-block";
+
+        } else {
+
+          latestBadge.style.display =
+            "none";
+
+        }
+
+
+      } catch (
+        error
+      ) {
+
+        console.error(
+          error
+        );
+
+
+        /*
+         * 모든 버전이 실패한 경우에만
+         * 선택창을 비활성화합니다.
+         */
+
+        versionSelect.disabled =
+          true;
+
+
+        installButton.disabled =
+          true;
+
+
+        firmwareInfo.innerHTML =
+          `<span class="error">${
+            error.message
+          }</span>`;
+
+
+        messageElement.textContent =
+          "";
+
+      }
+
+    }
+
+
+    versionSelect.addEventListener(
+      "change",
+      async () => {
+
+        try {
+
+          const version =
+            Number(
+              versionSelect.value
+            );
+
+
+          if (
+            version ===
+            latestVersion
+          ) {
+
+            latestBadge.style.display =
+              "inline-block";
+
+          } else {
+
+            latestBadge.style.display =
+              "none";
+
+          }
+
+
+          installButton.disabled =
+            true;
+
+
+          await loadFirmware(
+            version
+          );
+
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            error
+          );
+
+
+          installButton.disabled =
+            true;
+
+
+          firmwareInfo.innerHTML =
+            `<span class="error">${
+              error.message
+            }</span>`;
+
+        }
+
+      }
+    );
+
+
+    installButton.addEventListener(
+      "click",
+      installFirmware
+    );
+
+
+    initialize();
+
+  </script>
+
+
+</body>
+
+</html>
