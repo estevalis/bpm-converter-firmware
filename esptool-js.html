@@ -813,11 +813,16 @@
         flashConfig
       );
 
+      const commitMessage =
+      flashConfig.commit_message;
 
       firmwareInfo.innerHTML =
         `<strong>Build ${version}</strong><br>` +
-        `ESP32용 펌웨어입니다.`;
-
+        (
+          commitMessage
+            ? commitMessage
+            : "ESP32용 펌웨어입니다."
+        );
 
       messageElement.innerHTML =
         "USB로 ESP32를 연결한 후<br>" +
