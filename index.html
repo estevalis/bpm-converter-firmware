@@ -7,9 +7,9 @@
     // Flash engine
     // ============================================================
 
-    const FLASH_ENGINE = "esptool";   // 둘중 하나는 주석처리 필요
-    // const FLASH_ENGINE = "webtools";   // 둘중 하나는 주석처리 필요
-  </script>  
+    // const FLASH_ENGINE = "esptool";   // 둘중 하나는 주석처리 필요
+    const FLASH_ENGINE = "webtools";   // 둘중 하나는 주석처리 필요
+  </script>
 
   <meta charset="utf-8">
 
@@ -407,42 +407,16 @@
 
 
       <div class="warning">
-
         <strong>
-          ⚠ NVS 설정
+          ⚠ 설정을 유지하려면
         </strong>
 
-        <label
-          for="nvsOption"
-          style="display: block; margin-bottom: 8px;"
-        >
-          Wi-Fi 및 장치 설정이 저장된 NVS 영역을 어떻게 처리할지 선택하세요.
-        </label>
+        설치 과정에서
+        <b>Erase device</b>를 선택하지 마세요.
 
-        <select
-          id="nvsOption"
-          style="width: 100%; padding: 10px 12px; border: 1px solid var(--warning-border); border-radius: 8px; background: #fff; color: var(--text); font: inherit;"
-        >
-
-          <option
-            value="keep"
-            selected
-          >
-            NVS 삭제 안함 (기본값)
-          </option>
-
-          <option value="erase">
-            NVS 초기화
-          </option>
-
-        </select>
-
-        <div
-          id="nvsDescription"
-          style="margin-top: 8px;"
-        >
-          기존 Wi-Fi 및 장치 설정을 유지한 상태로 펌웨어를 설치합니다.
-        </div>
+        Wi-Fi 및 장치 설정이 저장된
+        NVS 영역은 플래싱 대상에서 제외되어
+        기존 설정을 유지하도록 구성되어 있습니다.
 
       </div>
 
@@ -532,16 +506,6 @@
     const installButton =
       document.getElementById(
         "installButton"
-      );
-
-    const nvsOption =
-      document.getElementById(
-        "nvsOption"
-      );
-
-    const nvsDescription =
-      document.getElementById(
-        "nvsDescription"
       );
 
 
@@ -849,9 +813,6 @@
       versionSelect.disabled =
         true;
 
-      nvsOption.disabled =
-        true;
-
       try {
 
         const version =
@@ -908,6 +869,9 @@
 
         /*
          * 실제 플래싱은 외부 엔진이 담당합니다.
+         *
+         * flash()가 정상적으로 완료될 때까지
+         * 여기서 기다립니다.
          */
 
         await flashModule.flash({
@@ -916,7 +880,7 @@
             version,
 
           nvs:
-            nvsOption.value,
+            "keep",
 
           flashConfig:
             currentFlashConfig,
@@ -944,6 +908,12 @@
             html
           ) {
 
+            /*
+             * flashModule에서 특별히
+             * firmwareInfo를 변경할 필요가 있을 때만
+             * 사용합니다.
+             */
+
             firmwareInfo.innerHTML =
               html;
           }
@@ -952,14 +922,14 @@
 
 
         /*
-         * 플래싱 성공
+         * flash()가 정상적으로 resolve된 경우에만
+         * 설치 완료를 표시합니다.
+         *
+         * firmwareInfo는 Build + commit message를
+         * 그대로 유지합니다.
          */
 
         messageElement.textContent =
-          "펌웨어 설치가 완료되었습니다.";
-
-        firmwareInfo.innerHTML =
-          `<strong>Build ${version}</strong><br>` +
           "펌웨어 설치가 완료되었습니다.";
 
 
@@ -1013,9 +983,6 @@
           false;
 
         installButton.disabled =
-          false;
-
-        nvsOption.disabled =
           false;
       }
     }
@@ -1185,32 +1152,6 @@
           "";
       }
     }
-
-
-    // ============================================================
-    // NVS
-    // ============================================================
-
-    nvsOption.addEventListener(
-      "change",
-      () => {
-
-        if (
-          nvsOption.value ===
-          "erase"
-        ) {
-
-          nvsDescription.textContent =
-            "기존 Flash 데이터를 모두 초기화한 후 펌웨어를 설치합니다. Wi-Fi 및 장치 설정도 삭제됩니다.";
-
-        } else {
-
-          nvsDescription.textContent =
-            "기존 Wi-Fi 및 장치 설정을 유지한 상태로 펌웨어를 설치합니다.";
-        }
-
-      }
-    );
 
 
     // ============================================================
