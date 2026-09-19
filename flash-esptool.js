@@ -147,12 +147,6 @@ export async function flash({
       "ESP32에 연결하는 중..."
     );
 
-    if (!port.readable && !port.writable) {
-    await port.open({
-        baudRate: 115200
-    });
-    }
-
     transport =
       new Transport(
         port,
@@ -328,12 +322,20 @@ export async function flash({
       "설치가 완료되었습니다. ESP32를 재시작하는 중..."
     );
 
+    console.log("Executing reliable hard reset sequence for Windows/Mac...");
 
-    console.log(`await transport.setRTS + hard_reset`);
+    // ESP-Web-Tools 방식의 정밀한 DTR/RTS 토글 시퀀스
+    await transport.setDtr(false);
+    await transport.setRts(true);
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // await transport.setRTS(true);
-    // await new Promise(resolve => setTimeout(resolve, 100));
-    await esploader.after("hard_reset");
+    await transport.setDtr(true);
+    await transport.setRts(false);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    await transport.setDtr(false);
+    await transport.setRts(false);
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     setMessage(
       "펌웨어 설치가 완료되었습니다."
