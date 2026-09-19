@@ -1,0 +1,30 @@
+{
+  "build_date": "2026-09-19",
+  "build_time": "16:52:45",
+  "files": [
+    {
+      "name": "bootloader.bin",
+      "address": "0x1000"
+    },
+    {
+      "name": "partitions.bin",
+      "address": "0x8000"
+    },
+    {
+      "name": "boot_app0.bin",
+      "address": "0xE000"
+    },
+    {
+      "name": "firmware.bin",
+      "address": "0x10000"
+    },
+    {
+      "name": "littlefs.bin",
+      "address": "0x290000"
+    }
+  ],
+  "preserve": [
+    "nvs"
+  ],
+  "commit_message": "wifi로 측정데이터 전송 (개발중)"
+}
