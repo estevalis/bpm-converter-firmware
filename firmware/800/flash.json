@@ -1,6 +1,6 @@
 {
   "build_date": "2026-09-19",
-  "build_time": "16:52:45",
+  "build_time": "23:06:56",
   "files": [
     {
       "name": "bootloader.bin",
@@ -26,5 +26,5 @@
   "preserve": [
     "nvs"
   ],
-  "commit_message": "wifi로 측정데이터 전송 (개발중)"
+  "commit_message": "전송 데이터의 타임스탬프 고정"
 }
