@@ -1,6 +1,6 @@
 {
   "build_date": "2026-09-23",
-  "build_time": "18:03:59",
+  "build_time": "18:49:09",
   "files": [
     {
       "name": "bootloader.bin",
@@ -26,5 +26,5 @@
   "preserve": [
     "nvs"
   ],
-  "commit_message": "버튼A 롱클릭으로 결과값 전송"
+  "commit_message": "버튼 A 롱클릭으로 결과값 전송"
 }
