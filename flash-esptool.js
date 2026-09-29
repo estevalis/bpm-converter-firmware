@@ -45,7 +45,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      `ESP32 MAC 주소가 올바르지 않습니다: ${mac}`
+      `ESP32 식별자가 올바르지 않습니다: ${mac}`
     );
 
   }
@@ -546,7 +546,7 @@ export async function flash({
     if (!license) {
 
       throw new Error(
-        `등록되지 않은 장치입니다.\nMAC: ${mac}`
+        `등록되지 않은 장치입니다.\n${mac}`
       );
 
     }
