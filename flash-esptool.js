@@ -79,7 +79,7 @@ async function fetchLicense(mac) {
   } catch (error) {
 
     throw new Error(
-      `라이선스 파일을 확인할 수 없습니다.\n${error.message}`
+      `라이센스 파일을 확인할 수 없습니다.\n${error.message}`
     );
 
   }
@@ -99,7 +99,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      `라이선스 파일을 가져오지 못했습니다. HTTP ${response.status}`
+      `라이센스 파일을 가져오지 못했습니다. HTTP ${response.status}`
     );
 
   }
@@ -115,7 +115,7 @@ async function fetchLicense(mac) {
   } catch {
 
     throw new Error(
-      "라이선스 파일의 JSON 형식이 올바르지 않습니다."
+      "라이센스 파일의 JSON 형식이 올바르지 않습니다."
     );
 
   }
@@ -127,7 +127,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      "라이선스 파일의 형식이 올바르지 않습니다."
+      "라이센스 파일의 형식이 올바르지 않습니다."
     );
 
   }
@@ -138,7 +138,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      "라이선스 파일에 MAC 주소가 없습니다."
+      "라이센스 파일에 식별자가 없습니다."
     );
 
   }
@@ -149,7 +149,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      "라이선스 파일에 signature가 없습니다."
+      "라이센스 파일에 signature가 없습니다."
     );
 
   }
@@ -160,7 +160,7 @@ async function fetchLicense(mac) {
   ) {
 
     throw new Error(
-      "라이선스의 MAC 주소가 장치와 일치하지 않습니다."
+      "라이센스가 장치와 일치하지 않습니다."
     );
 
   }
@@ -182,7 +182,7 @@ function createLicenseBin(license) {
   ) {
 
     throw new Error(
-      "라이선스 MAC 주소가 올바르지 않습니다."
+      "라이센스 식별자가 올바르지 않습니다."
     );
 
   }
@@ -216,7 +216,7 @@ function createLicenseBin(license) {
   } catch {
 
     throw new Error(
-      "라이선스 signature의 Base64 형식이 올바르지 않습니다."
+      "라이센스 signature의 Base 형식이 올바르지 않습니다."
     );
 
   }
@@ -227,7 +227,7 @@ function createLicenseBin(license) {
   ) {
 
     throw new Error(
-      `라이선스 signature 길이가 올바르지 않습니다. (${signatureBytes.length} bytes)`
+      `라이센스 signature 길이가 올바르지 않습니다. (${signatureBytes.length} bytes)`
     );
 
   }
@@ -517,7 +517,7 @@ export async function flash({
      */
 
     setMessage(
-      "ESP32 라이선스를 확인하는 중..."
+      "ESP32 라이센스를 확인하는 중..."
     );
 
 
@@ -534,7 +534,7 @@ export async function flash({
 
 
     /*
-     * MAC에 해당하는 라이선스 파일 확인
+     * MAC에 해당하는 라이센스 파일 확인
      */
 
     const license =
@@ -553,7 +553,7 @@ export async function flash({
 
 
     /*
-     * 라이선스 바이너리 생성
+     * 라이센스 바이너리 생성
      */
 
     const licenseData =
@@ -563,7 +563,7 @@ export async function flash({
 
 
     /*
-     * flash.json에서 라이선스 주소 확인
+     * flash.json에서 라이센스 주소 확인
      */
 
     const licenseAddress =
@@ -607,7 +607,7 @@ export async function flash({
 
 
     /*
-     * 라이선스를 마지막에 추가합니다.
+     * 라이센스를 마지막에 추가합니다.
      */
 
     files.push({
