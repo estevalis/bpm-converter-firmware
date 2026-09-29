@@ -1,5 +1,9 @@
+// const ESP_WEB_TOOLS_URL =
+//   "https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"; //원본
+// const ESP_WEB_TOOLS_URL =
+//   "https://unpkg.com/@zjwhitehead/esp-web-tools@10.2.0-b1/dist/web/install-button.js?module"; //포크버젼
 const ESP_WEB_TOOLS_URL =
-  "https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module";
+  "./esp-web-tools/install-button.js"; // 로컬에서 사용
 
 let espWebToolsLoaded = false;
 let manifestUrl = null;
@@ -52,7 +56,8 @@ function createManifest({
   return {
     name: "BPM Converter",
     version: String(version),
-    new_install_prompt_erase: true,
+    // new_install_prompt_erase: true,
+    new_install_prevent_erase: true,
     builds: [
       {
         chipFamily: "ESP32",
@@ -103,6 +108,11 @@ function createWebToolsElement(manifestUrl) {
   element.setAttribute(
     "manifest",
     manifestUrl
+  );
+
+  element.setAttribute(
+    "baud-rate",
+    "1500000"
   );
 
   /*
