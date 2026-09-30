@@ -36,140 +36,81 @@ function normalizeMac(mac) {
 
 
 async function fetchLicense(mac) {
+  const macHex = normalizeMac(mac);
 
-  const macHex =
-    normalizeMac(mac);
-
-  if (
-    macHex.length !== 12
-  ) {
-
+  if (macHex.length !== 12) {
     throw new Error(
       `ESP32 식별자가 올바르지 않습니다: ${mac}`
     );
-
   }
 
+  const fileName = `${macHex}.json`;
+  const url = `${LICENSE_BASE_URL}/${fileName}`;
 
-  const fileName =
-    `${macHex}.json`;
-
-  const url =
-    `${LICENSE_BASE_URL}/${fileName}`;
-
-
-  console.log(
-    "License URL:",
-    url
-  );
-
+  console.log("License URL:", url);
 
   let response;
 
   try {
-
-    response =
-      await fetch(
-        url,
-        {
-          cache: "no-store"
-        }
-      );
-
+    response = await fetch(url, {
+      cache: "no-store"
+    });
   } catch (error) {
-
     throw new Error(
-      `라이센스 파일을 확인할 수 없습니다.\n${error.message}`
+      `라이센스 파일을 가져오지 못했습니다.\n${error.message}`
     );
-
   }
 
-
-  if (
-    response.status === 404
-  ) {
-
+  if (response.status === 404) {
     return null;
-
   }
 
-
-  if (
-    !response.ok
-  ) {
-
+  if (!response.ok) {
     throw new Error(
       `라이센스 파일을 가져오지 못했습니다. HTTP ${response.status}`
     );
-
   }
-
 
   let license;
 
   try {
-
-    license =
-      await response.json();
-
+    license = await response.json();
   } catch {
-
     throw new Error(
       "라이센스 파일의 JSON 형식이 올바르지 않습니다."
     );
-
   }
-
 
   if (
     !license ||
-    typeof license !== "object"
+    typeof license !== "object" ||
+    Array.isArray(license)
   ) {
-
     throw new Error(
       "라이센스 파일의 형식이 올바르지 않습니다."
     );
-
   }
 
-
-  if (
-    typeof license.mac !== "string"
-  ) {
-
+  if (typeof license.mac !== "string") {
     throw new Error(
       "라이센스 파일에 식별자가 없습니다."
     );
-
   }
 
-
-  if (
-    typeof license.signature !== "string"
-  ) {
-
+  if (typeof license.signature !== "string") {
     throw new Error(
       "라이센스 파일에 signature가 없습니다."
     );
-
   }
 
-
-  if (
-    normalizeMac(license.mac) !== macHex
-  ) {
-
+  if (normalizeMac(license.mac) !== macHex) {
     throw new Error(
       "라이센스가 장치와 일치하지 않습니다."
     );
-
   }
 
-
   return license;
-
 }
-
 
 function createLicenseBin(license) {
 
@@ -438,10 +379,8 @@ function getLicenseAddress(
 
 }
 
-
 export async function flash({
   version,
-  nvs,
   flashConfig,
   baseUrl,
   setMessage,
@@ -537,46 +476,26 @@ export async function flash({
      * MAC에 해당하는 라이센스 파일 확인
      */
 
-    const license =
-      await fetchLicense(
-        mac
+    let licenseData = null;
+    let licenseError = null;
+
+    try {
+      const license = await fetchLicense(mac);
+
+      if (license) {
+        licenseData = createLicenseBin(license);
+        console.log("License found:", mac);
+      } else {
+        console.log("No license found:", mac);
+      }
+    } catch (error) {
+      licenseError = error.message;
+
+      console.warn(
+        "License error:",
+        licenseError
       );
-
-
-    if (!license) {
-
-      throw new Error(
-        `등록되지 않은 장치입니다.\n${mac}`
-      );
-
     }
-
-
-    /*
-     * 라이센스 바이너리 생성
-     */
-
-    const licenseData =
-      createLicenseBin(
-        license
-      );
-
-
-    /*
-     * flash.json에서 라이센스 주소 확인
-     */
-
-    const licenseAddress =
-      getLicenseAddress(
-        flashConfig
-      );
-
-
-    console.log(
-      "License address:",
-      `0x${licenseAddress.toString(16)}`
-    );
-
 
     /*
      * GitHub Pages에서 BIN 파일 다운로드
@@ -610,19 +529,29 @@ export async function flash({
      * 라이센스를 마지막에 추가합니다.
      */
 
-    files.push({
+    if (licenseData) {
+      try {
+        const licenseAddress = getLicenseAddress(flashConfig);
 
-      name:
-        "license",
+        files.push({
+          name: "license",
+          address: licenseAddress,
+          data: licenseData
+        });
 
-      address:
-        licenseAddress,
+        console.log(
+          "License address:",
+          `0x${licenseAddress.toString(16)}`
+        );
+      } catch (error) {
+        licenseError = error.message;
 
-      data:
-        licenseData
-
-    });
-
+        console.warn(
+          "License configuration error:",
+          licenseError
+        );
+      }
+    }
 
     console.log(
       "Flash files:",
@@ -647,23 +576,6 @@ export async function flash({
         })
       );
 
-
-    const eraseAll =
-      nvs === "erase";
-
-
-    console.log(
-      "NVS:",
-      nvs
-    );
-
-
-    console.log(
-      "eraseAll:",
-      eraseAll
-    );
-
-
     /*
      * Flash
      */
@@ -685,16 +597,6 @@ export async function flash({
 
       flashSize:
         "keep",
-
-      /*
-       * 기본값:
-       * false → NVS 유지
-       *
-       * NVS 초기화를 선택했을 때만
-       * true가 됩니다.
-       */
-
-      eraseAll,
 
       compress:
         true,
@@ -764,28 +666,27 @@ export async function flash({
 
     console.log("Executing hard reset sequence...");
 
-    await port.setSignals({
-      dataTerminalReady: false,
-      requestToSend: true
-    });
+    await transport.setDTR(false);
+    await transport.setRTS(true);
+
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    await port.setSignals({
-      dataTerminalReady: true,
-      requestToSend: false
-    });
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await transport.setRTS(false);
+    await transport.setDTR(false);
 
-    await port.setSignals({
-      dataTerminalReady: false,
-      requestToSend: false
-    });
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    setMessage(
-      "펌웨어 설치가 완료되었습니다."
-    );
-
+    if (licenseError) {
+      setMessage(
+        `펌웨어 설치 완료 (라이센스 오류: ${licenseError})`
+      );
+    } else if (!licenseData) {
+      setMessage(
+        "펌웨어 설치가 완료되었습니다. 라이센스는 설치되지 않았습니다(라이센스 없음)."
+      );
+    } else {
+      setMessage(
+        "펌웨어 및 라이센스 설치가 완료되었습니다."
+      );
+    }
 
   } finally {
 

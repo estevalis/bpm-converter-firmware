@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP32 Reset Tester</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f3f4f6;
+      color: #222;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .description {
+      margin-bottom: 24px;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin: 6px 0;
+      border: 0;
+      border-radius: 7px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #64748b;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    .status {
+      margin: 16px 0;
+      padding: 12px;
+      border-radius: 7px;
+      background: #f1f5f9;
+      font-size: 14px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .connected {
+      color: #15803d;
+    }
+
+    .disconnected {
+      color: #b91c1c;
+    }
+
+    .section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .log {
+      height: 240px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #111827;
+      color: #d1fae5;
+      border-radius: 7px;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: #666;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>ESP32 Reset Tester</h1>
+
+    <div class="description">
+      M5StickC Plus SE의 USB 시리얼 리셋 동작을 테스트합니다.
+      먼저 USB 포트를 연결한 다음 원하는 리셋 방식을 선택하세요.
+    </div>
+
+    <button id="connectButton" onclick="connectPort()">
+      USB 연결
+    </button>
+
+    <button
+      id="disconnectButton"
+      class="secondary"
+      onclick="disconnectPort()"
+      disabled
+    >
+      연결 해제
+    </button>
+
+    <div id="status" class="status disconnected">
+      연결되지 않음
+    </div>
+
+    <div class="section">
+      <h2>리셋 테스트</h2>
+
+      <button onclick="testReset('rts')">
+        1. RTS 리셋 (100ms)
+      </button>
+
+      <button onclick="testReset('dtr_rts')">
+        2. DTR / RTS 리셋
+      </button>
+
+      <button onclick="testReset('hard')">
+        3. esptool-js hard_reset
+      </button>
+
+      <button onclick="testReset('rts_long')">
+        4. RTS 리셋 (500ms)
+      </button>
+
+      <button onclick="testReset('rts_pulse')">
+        5. RTS 펄스 (LOW → HIGH)
+      </button>
+    </div>
+
+    <div class="section">
+      <h2>로그</h2>
+      <div id="log" class="log"></div>
+      <button class="secondary" onclick="clearLog()">
+        로그 지우기
+      </button>
+    </div>
+
+    <div class="note">
+      주의: 리셋 테스트는 ESP32의 현재 실행 상태를 변경합니다.
+      각 테스트 후 기기가 재부팅되는지 직접 확인하세요.
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      ESPLoader,
+      Transport
+    } from "https://unpkg.com/esptool-js@0.6.0/bundle.js";
+
+    let port = null;
+    let transport = null;
+    let esploader = null;
+    let busy = false;
+
+    const connectButton =
+      document.getElementById("connectButton");
+
+    const disconnectButton =
+      document.getElementById("disconnectButton");
+
+    const statusElement =
+      document.getElementById("status");
+
+    const logElement =
+      document.getElementById("log");
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+
+      logElement.textContent +=
+        `[${time}] ${message}\n`;
+
+      logElement.scrollTop =
+        logElement.scrollHeight;
+
+      console.log(message);
+    }
+
+    function setStatus(message, connected = null) {
+      statusElement.textContent = message;
+
+      if (connected === true) {
+        statusElement.className =
+          "status connected";
+      } else if (connected === false) {
+        statusElement.className =
+          "status disconnected";
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve =>
+        setTimeout(resolve, ms)
+      );
+    }
+
+    function setBusy(value) {
+      busy = value;
+
+      connectButton.disabled =
+        value || !!port;
+
+      disconnectButton.disabled =
+        value || !port;
+
+      document.querySelectorAll(
+        ".section button"
+      ).forEach(button => {
+        if (button.textContent !== "로그 지우기") {
+          button.disabled = value || !port;
+        }
+      });
+    }
+
+    function createTerminal() {
+      return {
+        clean() {},
+        writeLine(data) {
+          log(`[esptool] ${data}`);
+        },
+        write(data) {
+          log(`[esptool] ${data}`);
+        }
+      };
+    }
+
+    async function connectPort() {
+      if (port) {
+        return;
+      }
+
+      try {
+        port = await navigator.serial.requestPort();
+
+        log("USB 포트 선택 완료");
+
+        transport = new Transport(port, true);
+
+        await port.open({
+          baudRate: 115200
+        });
+
+        setStatus("USB 연결됨", true);
+
+        connectButton.disabled = true;
+        disconnectButton.disabled = false;
+
+        log("USB 연결 성공");
+      } catch (error) {
+        log(`연결 실패: ${error.message}`);
+
+        if (port) {
+          try {
+            await port.close();
+          } catch {}
+        }
+
+        port = null;
+        transport = null;
+
+        setStatus("연결 실패", false);
+        connectButton.disabled = false;
+      }
+    }
+
+    async function disconnectPort() {
+      if (busy) {
+        return;
+      }
+
+      try {
+        if (transport) {
+          await transport.disconnect();
+        } else if (port) {
+          await port.close();
+        }
+
+        log("USB 연결 해제");
+      } catch (error) {
+        log(`연결 해제 오류: ${error.message}`);
+      }
+
+      port = null;
+      transport = null;
+      esploader = null;
+
+      setStatus("연결되지 않음", false);
+
+      connectButton.disabled = false;
+      disconnectButton.disabled = true;
+    }
+
+    async function testReset(type) {
+      if (!port || !transport || busy) {
+        log("USB 연결이 필요합니다.");
+        return;
+      }
+
+      setBusy(true);
+
+      try {
+        log("--------------------------------");
+        log(`리셋 테스트 시작: ${type}`);
+
+        if (type === "rts") {
+          log("DTR = false");
+          await transport.setDTR(false);
+
+          log("RTS = true");
+          await transport.setRTS(true);
+
+          await sleep(100);
+
+          log("RTS = false");
+          await transport.setRTS(false);
+
+          log("DTR = false");
+          await transport.setDTR(false);
+        }
+
+        else if (type === "dtr_rts") {
+          log("DTR = false");
+          await transport.setDTR(false);
+
+          log("RTS = true");
+          await transport.setRTS(true);
+
+          await sleep(100);
+
+          log("DTR = true");
+          await transport.setDTR(true);
+
+          log("RTS = false");
+          await transport.setRTS(false);
+
+          await sleep(100);
+
+          log("RTS = true");
+          await transport.setRTS(true);
+
+          await sleep(100);
+
+          log("RTS = false");
+          await transport.setRTS(false);
+
+          log("DTR = false");
+          await transport.setDTR(false);
+        }
+
+        else if (type === "hard") {
+          log("ESPLoader 초기화");
+
+          esploader = new ESPLoader({
+            transport,
+            baudrate: 115200,
+            terminal: createTerminal(),
+            debugLogging: false
+          });
+
+          log("hard_reset 실행");
+
+          await esploader.after("hard_reset");
+        }
+
+        else if (type === "rts_long") {
+          log("DTR = false");
+          await transport.setDTR(false);
+
+          log("RTS = true");
+          await transport.setRTS(true);
+
+          await sleep(500);
+
+          log("RTS = false");
+          await transport.setRTS(false);
+
+          await sleep(500);
+        }
+
+        else if (type === "rts_pulse") {
+          log("RTS = false");
+          await transport.setRTS(false);
+
+          await sleep(100);
+
+          log("RTS = true");
+          await transport.setRTS(true);
+
+          await sleep(100);
+
+          log("RTS = false");
+          await transport.setRTS(false);
+        }
+
+        log("리셋 신호 전송 완료");
+        log("기기가 재부팅되었는지 확인하세요.");
+
+        setStatus(
+          "리셋 신호 전송 완료. 기기 상태를 확인하세요.",
+          true
+        );
+      } catch (error) {
+        log(`리셋 실패: ${error.message}`);
+
+        setStatus(
+          `리셋 오류: ${error.message}`,
+          true
+        );
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function clearLog() {
+      logElement.textContent = "";
+    }
+
+    window.connectPort = connectPort;
+    window.disconnectPort = disconnectPort;
+    window.testReset = testReset;
+    window.clearLog = clearLog;
+
+    if (!("serial" in navigator)) {
+      setStatus(
+        "이 브라우저는 Web Serial을 지원하지 않습니다.",
+        false
+      );
+
+      connectButton.disabled = true;
+    }
+  </script>
+</body>
+</html>
